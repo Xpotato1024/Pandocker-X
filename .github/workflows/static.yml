@@ -1,0 +1,36 @@
+name: R1 static validation
+on:
+  pull_request:
+  push:
+    branches: [master, 'codex/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static:
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_TARGET_DIR: ${{ runner.temp }}/pdx-r1/target
+      CARGO_HOME: ${{ runner.temp }}/pdx-r1/cargo
+      PDX_TEST_TEMP: ${{ runner.temp }}/pdx-r1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.99.0"
+          components: rustfmt, clippy
+      - name: Prepare isolated test root
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path $env:PDX_TEST_TEMP | Out-Null
+      - run: cargo fmt --all --check
+      - run: cargo check --workspace --all-targets --locked
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Unit, contracts, CLI, architecture and canonical documentation
+        run: cargo test --workspace --all-targets --locked

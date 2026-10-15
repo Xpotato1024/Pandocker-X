@@ -1,0 +1,10 @@
+[package]
+name = "pdx-adapters"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+pdx-core.workspace = true
+pdx-application.workspace = true

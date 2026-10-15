@@ -1,0 +1,14 @@
+[package]
+name = "pdx-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+sha2.workspace = true
+jsonschema.workspace = true
+serde-saphyr.workspace = true

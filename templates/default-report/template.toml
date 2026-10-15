@@ -1,0 +1,12 @@
+schema_version = 1
+id = "default-report"
+version = "0.1.0"
+recipe = "markdown-standalone"
+engine = "lualatex"
+required_tools = ["pandoc", "lualatex"]
+metadata_schema = "metadata.schema.json"
+defaults = "defaults.yaml"
+resources = ["LICENSE.txt"]
+license = "MIT"
+provenance = "Pandocker-X vNext original; no legacy template assets"
+sample = "sample.md"
