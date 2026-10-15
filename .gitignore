@@ -1,61 +1,6 @@
-# OS files
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
+# 将来のRust build出力。作業用scratchの置場にはしない。
+/target/
+# OSが生成する付随ファイル
 .DS_Store
-.AppleDouble
-.LSOverride
-
-# Editor and IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*.swn
-*.bak
-*.tmp
-*.log
-
-# Docker / environment files
-docker-compose.override.yml
-*.env
-
-# Pandoc / PDF outputs
-*.aux
-*.log
-*.out
-*.toc
-*.lof
-*.lot
-*.fls
-*.fdb_latexmk
-*.synctex.gz
-*.nav
-*.snm
-*.vrb
-*.blg
-*.bbl
-
-# Backup and temp files
-*.bak
-*~
-~$*
-
-# Ignore generated project trees by default.
-projects/**
-
-# Keep the bundled sample project tracked.
-!projects/sample-paper/
-!projects/sample-paper/content/
-!projects/sample-paper/output/
-!projects/sample-paper/output/.gitkeep
-!projects/sample-paper/**/defaults.yml
-!projects/sample-paper/**/report.md
-!projects/sample-paper/**/references.bib
-
-.codex/
-.doc/
-tools/pdx-win/target/
-tools/*/target/
-release/dist/
+Thumbs.db
+# Cargo.lock、原稿、pdx.toml、pdx.lockを包括的に無視しない。

@@ -1,141 +1,28 @@
-# AGENTS.md
+# Agent作業の入口
 
-## このリポジトリの基本方針
+対象は `Xpotato1024/Pandocker-X`。新版は旧版と非互換の新規開発です。
 
-- このリポジトリは `Pandocker-X` の source of truth。
-- 仕様はまず `README.md`、`defaults.yml`、`config/`、`tools/`、`templates/`、`preamble/`、`csl/` を確認する。
-- 実装と説明が食い違う場合は、実装と設定ファイルを優先して確認し、必要なら `README.md` も更新する。
-- 文章は UTF-8 で保存する。
-- 既存の日本語表記、コマンド名、ファイル構成は勝手に置き換えない。
+## 作業前に読むもの
 
-## Repository guard
+`AGENTS.md`、対象Issue、[文書正本マップ](docs/README.md)、関係する契約・実装・テストを読みます。旧版のコード・CLI・Issue・過去報告を現在仕様として扱いません。
 
-- repository identity は `Xpotato1024/Pandocker-X`。
-- default branch の source of truth は `gh repo view --json nameWithOwner,defaultBranchRef` の `defaultBranchRef.name`。
-- 現時点の `defaultBranchRef.name` は `master`。
-- PR base は `master`。
-- `Xpotato1024/Pandocker-X` 以外では作業しない。
-- `Xpotato1024/Selfrionette` では絶対に作業しない。
+## 不変条件
 
-## 作業前 preflight
+- Rust coreは純粋なモデル・検証・計画を所有し、FS・環境変数・process・CLI出力を行いません。
+- CLIと将来GUIは同じapplication APIを使い、Justへ製品ロジックを複製しません。
+- アプリの配置場所と原稿のProjectRootを分離します。既存原稿・ユーザー設定・前回成果物を勝手に変更・削除しません。
+- 通常組版はDocker内で完結し、host TeXや旧WSLミラーへ暗黙fallbackしません。
+- 静的検証、compile、実PDF生成、組版適合、配布受入を区別します。未実装・未検証を成功と表示しません。
 
-- 作業前に次を実行する。
-- `git remote -v`
-- `git branch --show-current`
-- `git status --short --branch`
-- `gh repo view --json nameWithOwner,defaultBranchRef`
-- 次のいずれかがあれば停止する。
-- repository mismatch
-- wrong base branch
-- unrelated working tree changes
-- validation failure
-- Docker / TeX runtime gap
+## 作業・検証・権限
 
-## 出力形式 guard
+- remote、default branch、作業branch、HEAD、working treeを確認します。default branchはGitHub metadataを正とし、現在は `master` です。
+- 1 Issue = 原則1 PR。taskで承認されたRound／scopeを守り、無関係な変更・公開契約の無承認拡張では停止します。
+- default branchへ直接commitせず、`codex/<issue>-<description>`で作業します。依存PRはbaseとmerge順を明示します。
+- merge、tag、Release/image公開、credentials、権限設定、破壊的cleanupは別の明示許可が必要です。
+- modelは実行環境とユーザーの明示指定に委ねます。原稿保全・path・隔離・更新削除など高リスク境界は独立レビューを行います。
+- 要件・契約・挙動が変わるときは、同じ変更で正本文書と必要テストを同期します。検証を削除・skip・弱体化して合格させません。
+- 人間向け文書は日本語UTF-8・LF。1主題1正本を守り、Accepted ADRの判断変更は新ADRでsupersedeします。
+- 一時物はtask所有の明示された領域に隔離します。ユーザーの既存untracked/ignoredを削除せず、意図した残存物と未実施検証を報告します。
 
-- Markdown の prompt や説明文で nested triple-backtick code fence を作らない。
-- 複数の prompt は独立した code block に分ける。
-- command example は prompt block 内では plain text として書く。
-- 生成物や PR 本文で、読みにくい表示崩れを作らない。
-
-## Phase / Round / Issue の扱い
-
-- Phase = 大きな技術的到達点。
-- Round = Codex に 1 回やらせる実行単位。
-- Issue = 1 PR に収める変更単位。
-- Codex に任せるのは Round まで。
-- 1 issue = 1 PR。
-- Phase を 1 round で終わらせない。
-- Issue の範囲を超える変更は次の round に分離する。
-
-## PR ルール
-
-- branch 名は `codex/<issue-number>-<short-description>` にする。
-- Codex は明示許可なしに merge しない。
-- implementation worker は safe for merge を宣言しない。
-- gpt-5.5 review なしに safe for merge, Round complete, goal complete を宣言しない。
-- PR 本文には `Summary`, `Changed Files`, `What Changed`, `Validation Run`, `Scope Check`, `Scope Exclusions`, `Runtime / Docker / TeX Status`, `Branch / Diff Gate`, `Remaining Risks`, `Handoff` を含める。
-- `Related issue` も必要に応じて明記する。
-
-## Validation ルール
-
-- 全PR: `git diff --check` / `git status --short --branch` / `git diff --name-only origin/master...HEAD`
-- shell 変更: `bash -n pdx`
-- Rust 変更: `cargo check --locked --manifest-path tools/pdx-win/Cargo.toml`
-- Rust 変更: `cargo check --locked --manifest-path tools/pdx-installer/Cargo.toml`
-- Docker / Pandoc / LaTeX 変更: `pdx setup` / `pdx new smoke-report` / `pdx build smoke-report -Log` / `test -f projects/smoke-report/output/report.pdf`
-- docs-only 変更: diff gate / `git diff --check` / mojibake grep
-
-## Pandocker-X 固有の作業知識
-
-- build 挙動の変更は、まず `tools/`、`config/`、`defaults.yml` を見る。
-- Windows の導入導線は `install.ps1` と `tools/pdx-installer/` を優先する。
-- source checkout は `install.ps1`、installed mode は `tools/pdx-installer/` を使う。
-- 旧来のシェル / PowerShell スクリプトは `legacy/` に退避した前提で、原則として新規修正しない。
-- 新しい雛形やテンプレートの変更は `templates/` と `projects/<project>/content/` の関係を崩さない。
-- LaTeX 周りの調整は `preamble/` を優先し、テンプレート全体を大きく書き換えない。
-- 引用スタイルの追加や切り替えは `csl/` と report 系 YAML header の整合を保つ。
-- `projects/<name>/content/` は本文。
-- `projects/<name>/output/` は生成物。
-- `log/` はビルドログ。
-- `source checkout` と `installed mode` の境界を崩さない。
-- 現行の issue 順は `#10`, `#11`, `#12`, `#9`, `#14`, `#13`。
-
-## Docker / TeX runtime ルール
-
-- Pandocker-X は Docker runtime を正とする。
-- host TeX Live を通常依存として扱わない。
-- target が `lualatex`, `platex`, `uplatex`, `pbibtex`, `dvipdfmx`, `latexmk` を要求するなら、container 内に必要。
-- target descriptor の要求と Docker image の実体を混同しない。
-
-## Unified template target ルール
-
-- `paper-build` や `template-build` のような別 top-level command を作らない。
-- user-facing route は `pdx new <name>`、`pdx new <name> --target <target-id>`、`pdx build <name>` に統一する。
-- default report workflow は `default-report` target として扱う。
-- 複数の入口を増やして利用者の導線を分岐させない。
-
-## 禁止事項
-
-- default branch への直接 commit はしない。
-- PR merge はしない。
-- GitHub Release の作成はしない。
-- release asset upload はしない。
-- secrets / credentials の編集はしない。
-- deployment keys の変更はしない。
-- destructive Docker cleanup はしない。
-- host TeX Live を source of truth として扱わない。
-- nested triple-backtick を prompt 内に作らない。
-
-## stop condition
-
-- 次の条件が出たら作業を止めて報告する。
-- repository mismatch
-- wrong base branch
-- issue scope exceeded
-- unrelated working tree changes
-- validation failure outside the scope
-- Docker / TeX runtime gap
-- release publishing ambiguity
-- required gpt-5.5 review unavailable
-
-## 詳細 docs への参照
-
-- Round 一括実行の詳細: `docs/agent/codex-round-batch-execution-guardrails.md`
-- Phase / Round / Issue 設計の詳細: `docs/agent/phase-round-issue-design-rules.md`
-
-## 運用メモ
-
-- 迷いがあれば Round を止める。
-- scope 外の修正は別 issue に分離する。
-- PR 本文は実差分と一致させる。
-- 文字化けが出たら保存形式を疑う。
-- 詳細な理由は `docs/agent/` に逃がす。
-
-## 迷ったときの参照順
-
-1. `README.md`
-2. `defaults.yml` と `config/`
-3. `tools/`
-4. `templates/`
-5. `projects/<name>/`
+詳細は[開発運用](docs/operations/development.md)と[実装段階](docs/operations/rounds.md)を参照してください。
