@@ -29,6 +29,12 @@
 
 追加の独立レビューは `fd65a7a5f0268fdfac5ca4fa3a9308151502744e` を固定し、P2を2件指摘しました。guardのJSON Pointerと標準resolverのURI復号差、nested `$schema` のdraft切替です。親側の修正前実行で前者は `metadata_schema`（禁止patternが実行）、後者はlock成功を観測しました。復号後参照の解決/巡回判定と全schema位置のdraft-07固定を追加し、正常なencoded refも受理する回帰試験が成功しました。
 
+`307fb90d3e12d7a1de3cef74ad6c1b7efa296021` の独立再レビューでは、2件の解消と標準resolverとの解釈の一致を確認し、新たな具体的不具合はありませんでした。reviewer自身のbuildは行わず、自己検証と独立コードレビューを区別しています。
+
+既存Ubuntu-24.04/WSL2と取得済み開発image（ID `sha256:0aabc47a61c105a320b69fecbc2708a2118ec9e54a8b10946998f21bd23423d4`）でも、task専用の公式SHA-256照合済みRust 1.99.0 Linux componentsを使い、fmt/check/clippyと35テストが成功しました。Linuxは非root、read-only-rootfs、network-none、2CPU/2GiB、task専用native filesystemで逐次実行し、symlink異常系も含みます。debug source installと日本語・空白pathへのinit/check/planも成功しました。これはRust製品コードのLinux検証であり、組版用image・実PDFの検証ではありません。
+
+最初のheadの[push CI](https://github.com/Xpotato1024/Pandocker-X/actions/runs/39769335136)はjob生成前に失敗していました。job階層では許可されない `runner.temp` 参照が原因です。[GitHubのcontext制限](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability)に従い、step内でRUNNER_TEMPからrootを作りGITHUB_ENVへ書く形へ修正しました。修正head `307fb90d` の[PR CI](https://github.com/Xpotato1024/Pandocker-X/actions/runs/39771230047)と[push CI](https://github.com/Xpotato1024/Pandocker-X/actions/runs/39771222731)は、ともにWindows/Linux全job成功です。GitHub connectorのrun一覧はPR event限定のため、push失敗を別途RESTで確認しました。課金・権限設定は変更していません。
+
 source installはrelease profile・task専用root・2 build jobsで成功しました。registry cacheあり、release targetは初回compileで、Cargo報告は2分26秒、呼出し全体は148.9秒でした。既存PATH・user設定は変更していません。source install成功を配布installer・更新/削除の受入とは扱いません。
 
 ## 静的操作の時間観測
@@ -49,6 +55,6 @@ Windows 11 Home 10.0.26200、i7-9700K（8 core）、約31.9GiB RAM、NTFS、Rust
 
 ## 残る範囲と共有条件
 
-Linux、Docker/Pandoc/TeX、実PDF、公式書式適合、network監視、配布installer、更新/rollback/uninstall、PDF再現性はNot Runです。既存R1 headのGitHub connector照会ではworkflow run/status一覧が空であり、Linux CI成功も現在のCI障害も断定していません。本変更の独立レビューは未実施です。
+Docker/Pandoc/TeXによる組版、実PDF、公式書式適合、製品のnetwork監視、配布installer、更新/rollback/uninstall、PDF再現性はNot Runです。実PDFは「実装済みだが環境だけ未確認」ではなく、build commandとDocker/snapshot/成果物の処理自体が未実装です。[初回PDFまでの最小R2範囲](../contracts/build.md#初回pdfまでの最小r2実装範囲)を契約へ整理しました。今回実装したのはR1のschema/CLIとCI修正です。実行できないbuild stubや、未検証の組版imageを製品へ追加していません。
 
 R1 treeのworkflowは読取り権限のstatic validationだけで、deploy・Release/image公開はありません。共有はPR #20をbaseとするDraftとし、merge順は #19 → #20 → 本変更です。先行PRをsquash mergeした場合はrebaseして実差分を再確認します。merge、tag、Release/image公開、Docker daemon設定変更、ユーザーの既存原稿・資格情報・security設定の変更は行いません。製品公開にはR2〜R5の受入と別の明示許可が残ります。

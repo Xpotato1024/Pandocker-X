@@ -1,7 +1,7 @@
 ---
 status: canonical
 owner: maintainers
-last_verified: 2026-10-15
+last_verified: 2026-10-22
 canonical_for:
   - docs/contracts/build.md
 ---
@@ -10,6 +10,26 @@ canonical_for:
 
 R1はvalidateと静的resolve/planだけを実装します。実行・snapshot・成果物確定は未実装で、R2で実PDFと異常系を用いて確認します。R1のBuildPlanは[Project契約](project.md)に従い、runtime未解決・build_ready=falseを維持します。
 
+## 初回PDFまでの最小R2実装範囲
+
+以下は計画であり、現在のCLIへ登録された機能ではありません。現在は `build` command、Docker adapter、runtime lock、snapshot、PDF検査、BuildRecord、成果物確定のすべてが未実装です。Dockerを用意するだけではR1からPDFを生成できません。開発用Linux検証containerを起動できることも、組版runtimeが存在する証拠ではありません。
+
+初回の縦断実装は一つのDocument・Target、内蔵default-report、Markdown→standalone LaTeX→LuaLaTeX→PDFに絞ります。GUI、複数engine、template配布管理、watch、installer自動更新を先に増やしません。本文・metadata・図・bibliographyは既存の宣言モデルを使い、template名によるRust分岐は追加しません。
+
+| 最小工程 | 実装する責務・受入条件 |
+| --- | --- |
+| 開発導入 | 現在のsource installを使い、ProjectをInstall外に作る。Rust不要の配布受入はR4へ分離 |
+| runtimeの用意と固定 | R2で開発用Dockerfileを作り、Pandoc・LuaLaTeX・日本語フォント・PDF validator（qpdf）を一つのimageへ含める。まずlocal buildしたimageを使い、公開を前提にしない。probeで実在・tool/version・fontと隔離条件を確認するまで準備済みとしない |
+| lock拡張 | 版付きlockへruntime種別・platform・固定image同一性を追加。local imageのconfig IDとregistry manifest digestを区別し、tagだけを許可しない。旧lockのunresolvedを勝手に解決しない。明示したruntime固定操作だけが更新する |
+| Docker境界 | adaptersにargv起動・bounded log・timeout/cancel・専用containerの収束を一か所で実装。applicationがprobe/snapshot/run/確定の順序を所有し、CLIは引数と表示だけ。host TeX・独自TeX parser・Composeへの組版処理の複製は不要 |
+| 入力snapshot | 宣言入力とtemplateの必要bytesだけをtask別BuildRootへcopyし、実際のbytesをhash。path/リンクとcopy前後の整合を再検査。組版中にProjectを読み直さず、Project全体をmountしない |
+| 実行とPDF判定 | 下記の隔離条件とNFR上限で一つのTargetを実行。今回の専用出力に新規・非空PDFがあり、image内のqpdf検査まで成功した場合だけ次へ進む。commandのexit 0や古いPDFは成功条件にならない |
+| 成果物確定 | build-id付き新規世代へPDFとBuildRecordを同一filesystemのstagingから確定。既存PDFを上書きしない。失敗時は今回所有物だけを収束させ、残存pathと非0結果を返す |
+
+R2の最初の動作保証は、ローカルで用意して固定したimageによる一つの実PDFまでです。registry向けの `fetch` は固定manifest digestを明示取得する別操作として追加し、buildがpull・lock更新を暗黙実行しない境界を維持します。local imageのみの試験を、他端末への配布・取得の受入とは呼びません。
+
+最低限の異常系はDocker不在、固定image/tool不足、snapshot中の入力変化、領域逸脱、組版異常/timeout/cancel、空/破損/古いPDF、保存失敗、確定途中失敗です。原稿と前回世代のdigest保全を各ケースで確認します。成功した実PDFとこれらの異常系がそろうまで、runtime/build-readyの保証へ進めません。image公開・製品release・daemon設定変更はこの実装計画によって許可されません。
+
 ## 処理順
 
 1. validate: Project、Target、template、metadata、path、lock整合を検証する。
@@ -17,7 +37,7 @@ R1はvalidateと静的resolve/planだけを実装します。実行・snapshot�
 3. runtime probe: Docker、固定image、要求toolと隔離条件の実体を確認する。
 4. declared input snapshot: 宣言された本文・図・bibliography・metadata・必要template資産だけをBuildRootへcopyし、実際に使うbytesのdigestを記録する。copy前後のpath/リンク境界と入力整合を確認する。
 5. run: 制限したコンテナでsnapshotを組版する。
-6. validate PDF: 今回のbuild-idの新規出力について、存在・非空・PDF形式/読取可能性・要求された成果物の充足を確認する。具体validatorはR2で固定する。
+6. validate PDF: 今回のbuild-idの新規出力について、存在・非空・PDF形式/読取可能性・要求された成果物の充足を確認する。image内qpdfの具体実装・実probe・受入はR2で固定する。
 7. 確定: PDF・BuildRecord等を世代build-id付き成果物セットとして確定する。中途半端な世代を成功扱いしない。
 8. cleanup: 今回所有のprocess・コンテナ・一時物を収束させ、結果と残存物を記録する。
 
