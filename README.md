@@ -1,111 +1,22 @@
-# Pandocker-X
+# Pandocker-X vNext
 
-Pandocker-X は、Markdown を Pandoc と LaTeX で PDF に変換するための Docker ベースのワークフローです。
+ユーザー所有の原稿を、選択したテンプレートと固定した組版環境でPDF化するローカルアプリを新規開発します。CLI-firstで、利用者の入口は `pdx` とします。
 
-このリポジトリは、次の内容に対する source of truth です。
+## 現在の状態
 
-- プロジェクト雛形
-- Docker イメージとビルド設定
-- Windows 向け配布バイナリ
-- Linux / macOS 向け source release の起点
+**R0は仕様・文書・開発運用の基盤のみです。vNextのCLI、Rust workspace、組版image、テンプレート、インストーラは未実装です。実行できるクイックスタートはまだありません。** 文書にあるコマンド・型・安全保証・性能値は、後続Roundで実装・検証する契約または目標です。
 
-## 利用方法
+2026-10-15承認の非互換な再開発です。旧実装・仕様・CLI互換性は継承しません。旧版は `archive/pre-rebuild-2026-10-15`、SHA `4fac1495e5418c57bb23e74509091ae333a5e7f4` に保全し、Git履歴と[LICENSE](LICENSE)を保持します。旧コードを新版treeへ移植せず、`legacy/` も残しません。保全の確認結果は[R0報告](docs/reports/r0-foundation.md)に記録します。
 
-### Windows
+保護pathの削除・規約の置換は親の適用待ちで、現行treeには一部の旧ファイルが残っています。適用待ち一覧と検証範囲は[R0報告](docs/reports/r0-foundation.md)を参照してください。
 
-Windows では、Rust 製の配布バイナリをインストールして WSL 経由で使います。
+## 読み始める場所
 
-- release asset: `pandocker-x-windows-<version>.zip`
-- checksum asset: `pandocker-x-checksums-<version>.sha256`
-- ローカル checkout 用の導入スクリプト: `install.ps1`
-- 実行環境: WSL 2、Docker Desktop または WSL Docker
+- [文書正本マップ](docs/README.md): 主題ごとの唯一の正本
+- [機能要件](docs/requirements/functional.md)と[非機能要件](docs/requirements/non-functional.md): 受入条件と検証への追跡
+- [構成と責務](docs/architecture/system.md): Rust共通コア、application API、Dockerと領域分離
+- [実装契約の入口](docs/contracts/README.md): 設定・CLI・テンプレート・build
+- [実装段階](docs/operations/rounds.md): R0からR5への進め方
+- [貢献方法](CONTRIBUTING.md)と[agent入口](AGENTS.md)
 
-インストール後の典型的な実行例:
-
-```powershell
-.\pdx-bootstrap.exe install
-```
-
-### Linux / macOS
-
-Linux と macOS では、source release かローカル checkout を使い、ルート直下の Unix `pdx` を実行します。
-
-- release asset: `pandocker-x-source-<version>.zip`
-- checksum asset: `pandocker-x-checksums-<version>.sha256`
-- エントリポイント: `./pdx`
-- 実行環境: Docker、Docker Compose、`jq`
-
-初回実行の例:
-
-```bash
-./pdx setup
-./pdx new sample-report
-./pdx build sample-report
-```
-
-## クイックスタート
-
-### Windows の source checkout
-
-```powershell
-.\install.ps1
-pdx setup
-pdx new sample-report
-pdx build sample-report
-```
-
-### Linux / macOS の source checkout または source release
-
-```bash
-./pdx setup
-./pdx new sample-report
-./pdx build sample-report
-```
-
-## ディレクトリ構成
-
-- `config/` - 実行設定と WSL ヘルパー
-- `templates/` - `pdx new` が使うテンプレート
-- `preamble/` - LaTeX の preamble 断片
-- `csl/` - 引用スタイル
-- `tools/` - Windows 導入と setup 用の Rust バイナリ
-- `projects/<name>/content/` - Markdown 本文
-- `projects/<name>/output/` - 生成済み PDF
-- `docs/` - release、support、roadmap の文書
-
-## Release の流れ
-
-公開 release は次の流れで進めます。
-
-1. Issue を作成または更新する。
-2. `codex/` プレフィックスの branch を切る。
-3. 変更を commit する。
-4. branch を push する。
-5. PR を作る。
-6. レビュー後に merge する。
-7. `v1.2.3` のような release tag を push する。
-
-詳しい運用は [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
-
-## OSS 向けの案内
-
-- License は [MIT License](LICENSE) です。
-- 変更提案は [CONTRIBUTING.md](CONTRIBUTING.md) に従ってください。
-- Security report は [SECURITY.md](SECURITY.md) を参照してください。
-- Release asset には Windows zip、source archive、checksum file が含まれます。検証手順は [docs/release.md](docs/release.md) を参照してください。
-
-## 文書
-
-- [CONTRIBUTING.md](CONTRIBUTING.md)
-- [SECURITY.md](SECURITY.md)
-- [docs/release.md](docs/release.md)
-- [docs/windows-binary.md](docs/windows-binary.md)
-- [docs/roadmap.md](docs/roadmap.md)
-- [docs/build-metrics.md](docs/build-metrics.md)
-- [docs/agent/codex-round-batch-execution-guardrails.md](docs/agent/codex-round-batch-execution-guardrails.md)
-- [docs/agent/phase-round-issue-design-rules.md](docs/agent/phase-round-issue-design-rules.md)
-
-## 補足
-
-- `legacy/` には旧来の shell / PowerShell スクリプトがあります。参照・互換用であり、主要な導線ではありません。
-- GitHub release asset には Windows binaries、Unix 向け source archive、checksum file が含まれます。
+初期対象はWindows 11 x64 + Docker DesktopのLinux containers、およびLinux x86_64 + Docker Engineです。WSLではLinux版pdxを使う設計です。Dockerによる組版を正とし、host TeXへfallbackしません。GUI、旧版互換、未知ZIPの自動適合は今回の対象外です。

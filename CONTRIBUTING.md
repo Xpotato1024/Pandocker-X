@@ -1,54 +1,9 @@
-# Contributing
+# 貢献方法
 
-This repository is intended to be used through a small, predictable release flow.
+現在はvNext R0です。利用可能な製品やbuild手順はまだありません。[実装段階](docs/operations/rounds.md)で対象Roundを確認し、1 Issue = 1 PRで進めます。旧版の機能・Issue順を自動的に持ち込みません。
 
-## Branching and PR flow
+[正本マップ](docs/README.md)で該当主題を探し、要件ID・契約・検証方法を先にそろえてください。文章は日本語UTF-8・LFとし、仕様のコピーや空の大量stubを追加しません。ADRは採用理由、contractsは実装時の規範です。未実装・未検証を動作保証として書かないでください。
 
-1. Create or update an issue for the work.
-2. Create a branch with the `codex/` prefix.
-3. Make the smallest change that solves the issue.
-4. Run the relevant checks locally.
-5. Push the branch.
-6. Open a pull request.
-7. Merge after review and verification.
+実装ではRustのcore/application/adapters/CLIの責務を守り、GUIも同じapplication APIを使う方針です。開発用Justを導入する場合は既存のCargo・検証・runtimeの処理へ薄く委譲し、製品ロジックを複製しません。
 
-Example branch names:
-
-- `codex/ci-foundation`
-- `codex/release-flow`
-- `codex/unix-entrypoint`
-
-## Commit guidance
-
-- Keep commits focused on a single outcome.
-- Use an imperative subject line.
-- Mention the issue number if one exists.
-
-## Release flow
-
-1. Merge the feature or fix branch.
-2. Confirm the release assets are ready.
-3. Push a version tag such as `v1.2.3`.
-4. Let the release workflow publish the Windows zip and source archive.
-
-## Local checks
-
-Run the checks that match the files you changed:
-
-```powershell
-cargo check --locked --manifest-path tools/pdx-win/Cargo.toml
-cargo check --locked --manifest-path tools/pdx-installer/Cargo.toml
-```
-
-```bash
-bash -n pdx legacy/install.sh legacy/scripts/*.sh
-```
-
-If you touch release packaging or PowerShell scripts, also validate the relevant `.ps1` files in a PowerShell session.
-
-## Documentation rules
-
-- Update the docs when behavior changes.
-- Keep `README.md`, `docs/windows-binary.md`, and `docs/roadmap.md` aligned with the actual implementation.
-- Prefer explicit platform notes over assumptions about "multi-platform" support.
-
+作業前確認、差分gate、検証証拠、PR記載事項、独立review、一時物の管理は[開発運用](docs/operations/development.md)を正本とします。原稿をfixtureとして無断収集・送信せず、第三者テンプレートや資産には出典と許諾を付けます。
