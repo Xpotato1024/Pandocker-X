@@ -1,7 +1,7 @@
 ---
 status: canonical
 owner: maintainers
-last_verified: 2026-10-15
+last_verified: 2026-10-22
 canonical_for:
   - docs/contracts/template.md
 ---
@@ -19,6 +19,10 @@ R1で対応するrecipeは `markdown-standalone` のみです。入力はMarkdow
 ## metadata schemaとdigest
 
 標準 `jsonschema` validatorを `default-features=false` で使い、HTTP/file取得を組み込みません。schema自身をdraft-07 meta-schemaで検証してから結合metadataを検証します。`$schema` は `http://json-schema.org/draft-07/schema#` を明示します。schema JSONは重複keyを拒否し、最大64KiB、深さ24、参照展開を含め4096 nodesです。外部 `$ref`、`$id`、dynamic/recursive ref、再帰参照、regexの `pattern` / `patternProperties` はR1では拒否します。同一document内 `#/...` JSON pointerによる非再帰refは許可します。metadata違反はinstance pathとvalidator診断を返します。schemaのdefaults keywordで文書値を暗黙補完せず、defaults YAMLから明示結合します。
+
+禁止keywordはschema位置だけで判定します。`properties` / `definitions` / `dependencies` のユーザー定義名、`const` / `enum` / `default` / `examples` のデータ内で同じ文字列を使うことは許可します。`$ref` の参照先はschemaとして再検証し、禁止keywordや外部・再帰参照を隠せません。データ部分も深さ・node予算へ含めます。
+
+参照fragmentは標準resolverと同じくpercent-encodingをUTF-8へ復号してからJSON Pointerを解決し、復号後の参照で循環を検出します。各schema位置の `$schema` も上記draft-07宣言に限定し、入れ子で別draftへ切り替えて走査対象keywordを変えることを拒否します。literalデータ内の同名keyはschemaとして参照された場合だけこの制限を受けます。
 
 digestは `sha256:` + 64桁hexです。危険path/リンクをhash前に拒否し、関連fileを相対pathのUTF-8 byte順でsortします。SHA-256入力は `pdx-template-v1\0`、各fileのpath byte長（u64 big-endian）、path bytes、内容byte長（同）、実bytesの順です。manifest/schema/defaults/sample/license等の宣言資産を含み、mtime・絶対path・本文・文書metadataには依存しません。変更時は[明示lock](project.md)が必要です。
 

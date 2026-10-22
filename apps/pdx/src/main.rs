@@ -8,6 +8,7 @@ use std::{
     path::PathBuf,
     process::ExitCode,
 };
+mod display;
 
 #[derive(Parser)]
 #[command(
@@ -15,7 +16,11 @@ use std::{
     about = "Pandocker-X: Docker不要の静的検証・計画 (PDF生成はR2)"
 )]
 struct Cli {
-    #[arg(long, global = true, help = "version付きJSON objectを1個出力")]
+    #[arg(
+        long,
+        global = true,
+        help = "version付きJSON objectをstdoutに1個出力。既定は人間向け表示"
+    )]
     json: bool,
     #[command(subcommand)]
     command: Command,
@@ -79,6 +84,21 @@ fn main() -> ExitCode {
     emit(command, cli.json, result)
 }
 fn emit(command: &str, json_mode: bool, result: Result<Value, Diagnostic>) -> ExitCode {
+    if !json_mode {
+        let code = result.as_ref().err().map_or(0, |error| error.exit_code);
+        return if display::write_result(
+            &mut io::stdout().lock(),
+            &mut io::stderr().lock(),
+            command,
+            &result,
+        )
+        .is_ok()
+        {
+            ExitCode::from(code)
+        } else {
+            ExitCode::from(5)
+        };
+    }
     let (code, envelope) = match result {
         Ok(data) => (
             0,
@@ -89,11 +109,7 @@ fn emit(command: &str, json_mode: bool, result: Result<Value, Diagnostic>) -> Ex
             json!({"schema_version":1,"command":command,"status":"error","message":error.message,"data":null,"error":error,"unverified":StaticStatus::default().unverified}),
         ),
     };
-    let output = if json_mode {
-        serde_json::to_string(&envelope)
-    } else {
-        serde_json::to_string_pretty(&envelope)
-    };
+    let output = serde_json::to_string(&envelope);
     match output {
         Ok(output) => {
             if writeln!(io::stdout().lock(), "{output}").is_err() {

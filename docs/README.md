@@ -1,7 +1,7 @@
 ---
 status: canonical
 owner: maintainers
-last_verified: 2026-10-15
+last_verified: 2026-10-22
 canonical_for:
   - docs/README.md
 ---
@@ -30,3 +30,5 @@ canonical_for:
 過去の実施証拠: [R0報告](reports/r0-foundation.md)。この報告は現在仕様の正本ではありません。
 
 R1の実装・検証範囲: [R1報告](reports/r1-static-cli.md)。fieldの機械契約は各contractから `schemas/` へ参照します。
+
+R1のtemplate検証修正・通常CLI表示・source install・静的時間観測: [R1追補](reports/r1-usability.md)。

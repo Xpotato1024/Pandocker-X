@@ -1,7 +1,7 @@
 ---
 status: canonical
 owner: maintainers
-last_verified: 2026-10-15
+last_verified: 2026-10-22
 canonical_for:
   - docs/contracts/cli.md
 ---
@@ -42,7 +42,11 @@ JSON対応操作の `--json` はversion付きの一objectだけをstdoutに出�
 
 ## R1の具体契約
 
-`--json` はglobalでsubcommandの前後に置けます。`--` 以後は位置引数です。引数解析失敗・未知option・未知command・不正 `--json=...` でもJSON要求を先に検出し、[result schema 1](../../schemas/result-v1.schema.json)の一objectだけをstdoutへ返します。`--help` / `--version` はexit 0の通常テキスト表示を許す例外です。JSON以外の通常表示も現在は同じ結果のpretty JSONです。
+`--json` はglobalでsubcommandの前後に置けます。`--` 以後は位置引数です。引数解析失敗・未知option・未知command・不正 `--json=...` でもJSON要求を先に検出し、[result schema 1](../../schemas/result-v1.schema.json)の一objectだけをstdoutへ返します。`--help` / `--version` はexit 0の通常テキスト表示を許す例外です。
+
+`--json` なしでは人間向けの日本語要約を返します。成功はstdoutへ、失敗はコード・exit code・診断本文・metadata位置（ある場合）をstderrへ出します。主要な入力・template/lock不整合には確認先と明示的な復旧操作を添え、自動修復はしません。通常表示の文言は機械契約ではなく、parseする利用者は `--json` を指定してください。両表示で終了コードと検証処理は共通です。出力先への書込み失敗はexit 5です。
+
+通常のplan要約はTarget/Document、template ID/version・内蔵IDまたはProject内path・digest、順序付き本文、bibliography/resource/metadata参照、出力先、未確認の必要toolを表示します。全fieldと結合metadataは `plan --json` で返します。静的操作だけではruntime未確認・PDF生成未実装・`build_ready=false` であることを成功表示にも明示します。
 
 envelopeは `schema_version: 1`、`command`、`status: success|error`、`message`、`data`、`error`、`unverified` を常に持ちます。成功時はdata objectとerror=null、失敗時はdata=nullとerror objectです。errorは安定 `code`、`message`、`exit_code`、`instance_path`（metadata schema違反以外はnull）を持ちます。引数解析時commandは `arguments`。stdoutへの保存失敗はexit 5で、出力先自体が壊れている場合の完全JSONは保証できません。
 

@@ -208,3 +208,86 @@ fn help_and_version_are_documented_plain_text_exceptions() {
         assert!(serde_json::from_slice::<Value>(&output.stdout).is_err());
     }
 }
+
+#[test]
+fn human_output_guides_template_switch_and_error_recovery() {
+    let temp = sandbox();
+    let executable = binary();
+    let root = temp.path().join("新しい 原稿");
+    let text = |args: &[&std::ffi::OsStr], code| {
+        let output = Command::new(&executable)
+            .args(args)
+            .current_dir(temp.path())
+            .env("PATH", "")
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(code));
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        if code == 0 {
+            assert!(stderr.is_empty(), "{stderr}");
+            assert!(stdout.contains("build_ready=false"), "{stdout}");
+        } else {
+            assert!(stdout.is_empty(), "{stdout}");
+            assert!(stderr.contains("次:"), "{stderr}");
+        }
+        (stdout, stderr)
+    };
+    let (init, _) = text(&["init".as_ref(), root.as_os_str()], 0);
+    assert!(init.contains("pdx check"));
+    let before = snapshot(&root);
+    let (checked, _) = text(&["check".as_ref(), root.as_os_str()], 0);
+    assert!(checked.contains("Target: report"));
+    let (planned, _) = text(&["plan".as_ref(), root.as_os_str()], 0);
+    assert!(planned.contains("内蔵template: default-report"));
+    assert!(planned.contains("content/report.md"));
+    assert!(planned.contains("output/report"));
+    assert_eq!(before, snapshot(&root));
+
+    let template = local_template(&root);
+    let manifest = template.join("template.toml");
+    fs::write(
+        &manifest,
+        fs::read_to_string(&manifest)
+            .unwrap()
+            .replace("default-report", "local-report"),
+    )
+    .unwrap();
+    let before = snapshot(&root);
+    let (_, error) = text(&["check".as_ref(), root.as_os_str()], 3);
+    assert!(error.contains("[stale_lock]"));
+    assert!(error.contains("pdx lock"));
+    assert_eq!(before, snapshot(&root));
+    text(&["lock".as_ref(), root.as_os_str()], 0);
+    let before = snapshot(&root);
+    let (planned, _) = text(&["plan".as_ref(), root.as_os_str()], 0);
+    assert!(planned.contains("Template: local-report @"));
+    assert!(planned.contains("Template path: templates/custom"));
+    let (_, error) = text(
+        &[
+            "plan".as_ref(),
+            root.as_os_str(),
+            "--target".as_ref(),
+            "missing".as_ref(),
+        ],
+        2,
+    );
+    assert!(error.contains("[unknown_target]"));
+    assert!(error.contains("pdx check"));
+    assert_eq!(before, snapshot(&root));
+
+    fs::write(
+        root.join("metadata/common.yaml"),
+        "title: 42\nauthor: [著者名]\n",
+    )
+    .unwrap();
+    let before = snapshot(&root);
+    let (_, error) = text(&["check".as_ref(), root.as_os_str()], 2);
+    assert!(error.contains("[metadata_schema]"));
+    assert!(error.contains("/title"));
+    assert!(error.contains("metadata.schema.json"));
+    assert_eq!(before, snapshot(&root));
+    let (_, error) = text(&["check".as_ref(), "--unknown".as_ref()], 2);
+    assert!(error.contains("[invalid_arguments]"));
+    assert!(error.contains("pdx --help"));
+}

@@ -17,6 +17,7 @@ sha2 = "=0.10.9"
 tempfile = "=3.27.0"
 jsonschema = { version = "=0.58.6", default-features = false }
 serde-saphyr = { version = "=2.0.0", default-features = false, features = ["deserialize"] }
+percent-encoding = "=2.3.2"
 pdx-core = { path = "crates/pdx-core" }
 pdx-application = { path = "crates/pdx-application" }
 pdx-adapters = { path = "crates/pdx-adapters" }

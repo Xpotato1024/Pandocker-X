@@ -169,15 +169,32 @@ fn schema_validator(schema: &Value) -> Result<jsonschema::Validator> {
         ));
     }
     let mut budget = 4096;
-    schema_budget(schema, schema, 0, &mut budget, &mut Vec::new())?;
+    schema_budget(
+        schema,
+        schema,
+        SchemaPosition::Schema,
+        0,
+        &mut budget,
+        &mut Vec::new(),
+    )?;
     jsonschema::draft7::meta::validate(schema)
         .map_err(|e| Diagnostic::input("invalid_schema", e.to_string()))?;
     jsonschema::draft7::new(schema).map_err(|e| Diagnostic::input("invalid_schema", e.to_string()))
 }
 
+#[derive(Clone, Copy)]
+enum SchemaPosition {
+    Schema,
+    SchemaMap,
+    SchemaArray,
+    Dependencies,
+    Data,
+}
+
 fn schema_budget(
     value: &Value,
     root: &Value,
+    position: SchemaPosition,
     depth: usize,
     budget: &mut usize,
     refs: &mut Vec<String>,
@@ -192,16 +209,28 @@ fn schema_budget(
     match value {
         Value::Object(map) => {
             for (key, value) in map {
-                if matches!(
-                    key.as_str(),
-                    "$id" | "$dynamicRef" | "$recursiveRef" | "pattern" | "patternProperties"
-                ) {
+                let is_schema = matches!(position, SchemaPosition::Schema);
+                if is_schema
+                    && key == "$schema"
+                    && value.as_str() != Some("http://json-schema.org/draft-07/schema#")
+                {
+                    return Err(Diagnostic::input(
+                        "unsupported_schema",
+                        "R1 requires draft-07 in every schema position",
+                    ));
+                }
+                if is_schema
+                    && matches!(
+                        key.as_str(),
+                        "$id" | "$dynamicRef" | "$recursiveRef" | "pattern" | "patternProperties"
+                    )
+                {
                     return Err(Diagnostic::input(
                         "unsupported_schema_keyword",
                         format!("R1 schema excludes {key}"),
                     ));
                 }
-                if key == "$ref" {
+                if is_schema && key == "$ref" {
                     let reference = value.as_str().ok_or_else(|| {
                         Diagnostic::input("invalid_schema", "$ref must be string")
                     })?;
@@ -211,26 +240,66 @@ fn schema_budget(
                             "only same-document JSON pointer refs are allowed",
                         ));
                     }
-                    if refs.iter().any(|r| r == reference) {
+                    // Match the standard resolver's URI-fragment decoding before
+                    // JSON Pointer traversal. Compare decoded refs for cycles too.
+                    let pointer = percent_encoding::percent_decode_str(&reference[1..])
+                        .decode_utf8()
+                        .map_err(|_| Diagnostic::input("invalid_schema", "non-UTF8 local $ref"))?;
+                    if refs.iter().any(|r| r == pointer.as_ref()) {
                         return Err(Diagnostic::input(
                             "schema_budget",
                             "recursive schema refs are unsupported",
                         ));
                     }
-                    let target = root.pointer(&reference[1..]).ok_or_else(|| {
+                    let target = root.pointer(&pointer).ok_or_else(|| {
                         Diagnostic::input("invalid_schema", "unresolved local $ref")
                     })?;
-                    refs.push(reference.into());
-                    schema_budget(target, root, depth + 1, budget, refs)?;
+                    refs.push(pointer.into_owned());
+                    schema_budget(
+                        target,
+                        root,
+                        SchemaPosition::Schema,
+                        depth + 1,
+                        budget,
+                        refs,
+                    )?;
                     refs.pop();
-                } else {
-                    schema_budget(value, root, depth + 1, budget, refs)?;
                 }
+                // Only draft-07 schema-bearing keywords change position. Names in
+                // properties/definitions/dependencies and const/enum/default data
+                // are not keywords. Count all data, including the $ref string.
+                let child = match position {
+                    SchemaPosition::SchemaMap => SchemaPosition::Schema,
+                    SchemaPosition::Dependencies if !value.is_array() => SchemaPosition::Schema,
+                    SchemaPosition::Schema => match key.as_str() {
+                        "properties" | "definitions" => SchemaPosition::SchemaMap,
+                        "dependencies" => SchemaPosition::Dependencies,
+                        "allOf" | "anyOf" | "oneOf" => SchemaPosition::SchemaArray,
+                        "items" if value.is_array() => SchemaPosition::SchemaArray,
+                        "items"
+                        | "additionalItems"
+                        | "additionalProperties"
+                        | "contains"
+                        | "propertyNames"
+                        | "not"
+                        | "if"
+                        | "then"
+                        | "else" => SchemaPosition::Schema,
+                        _ => SchemaPosition::Data,
+                    },
+                    _ => SchemaPosition::Data,
+                };
+                schema_budget(value, root, child, depth + 1, budget, refs)?;
             }
         }
         Value::Array(values) => {
             for v in values {
-                schema_budget(v, root, depth + 1, budget, refs)?;
+                let child = if matches!(position, SchemaPosition::SchemaArray) {
+                    SchemaPosition::Schema
+                } else {
+                    SchemaPosition::Data
+                };
+                schema_budget(v, root, child, depth + 1, budget, refs)?;
             }
         }
         _ => {}
@@ -246,5 +315,73 @@ impl TemplatePackage {
             return Err(d);
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn restricted_keywords_are_rejected_in_every_schema_position() {
+        for (leaf, code) in [
+            (json!({"pattern": ".*"}), "unsupported_schema_keyword"),
+            (
+                json!({"patternProperties": {}}),
+                "unsupported_schema_keyword",
+            ),
+            (json!({"$id": "local"}), "unsupported_schema_keyword"),
+            (json!({"$dynamicRef": "#x"}), "unsupported_schema_keyword"),
+            (json!({"$recursiveRef": "#"}), "unsupported_schema_keyword"),
+            (
+                json!({"$ref": "https://example.invalid/schema"}),
+                "external_schema_ref",
+            ),
+        ] {
+            for mut schema in [
+                leaf.clone(),
+                json!({"properties": {"pattern": leaf}}),
+                json!({"definitions": {"$ref": leaf}}),
+                json!({"dependencies": {"pattern": leaf}}),
+                json!({"items": leaf}),
+                json!({"items": [leaf]}),
+                json!({"additionalItems": leaf}),
+                json!({"additionalProperties": leaf}),
+                json!({"propertyNames": leaf}),
+                json!({"contains": leaf}),
+                json!({"allOf": [leaf]}),
+                json!({"anyOf": [leaf]}),
+                json!({"oneOf": [leaf]}),
+                json!({"not": leaf}),
+                json!({"if": leaf}),
+                json!({"then": leaf}),
+                json!({"else": leaf}),
+                // A ref may turn an otherwise ignored data position into a schema.
+                json!({"x-data": leaf, "$ref": "#/x-data"}),
+            ] {
+                schema["$schema"] = json!("http://json-schema.org/draft-07/schema#");
+                let error = schema_validator(&schema).expect_err("restricted schema");
+                assert_eq!(error.code, code, "{schema}");
+            }
+        }
+    }
+
+    #[test]
+    fn literal_data_still_counts_towards_schema_budget() {
+        let mut data = json!(null);
+        for _ in 0..25 {
+            data = json!({"nested": data});
+        }
+        for data in [data, json!(vec![0; 4096])] {
+            let schema = json!({
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "default": data
+            });
+            assert_eq!(
+                schema_validator(&schema).err().unwrap().code,
+                "schema_budget"
+            );
+        }
     }
 }

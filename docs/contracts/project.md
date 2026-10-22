@@ -1,7 +1,7 @@
 ---
 status: canonical
 owner: maintainers
-last_verified: 2026-10-15
+last_verified: 2026-10-22
 canonical_for:
   - docs/contracts/project.md
 ---
@@ -35,6 +35,29 @@ Project設定内pathはProjectRoot相対、区切りは `/` のみです。空co
 出力は全Targetで同一/親子を禁止し、全Documentのsource、metadata、bibliography、resourceと全Targetのmetadata、ローカルtemplate directory、`pdx.toml` / `pdx.lock` / `.git` / `.pdx` とも同一/親子を禁止します。既存出力の祖先はdirectoryである必要があります。resource directory・既存出力の子孫も危険path/リンクを検査します。走査は10000 entries、深さ64 component以内です。原稿内容のparser・外部参照解析・敵対的な別userとのTOCTOU完全防御はR1の保証外です。R2の入力copy・確定では境界を再確認する必要があります。
 
 ProjectRoot自体をrepository配下やASCII pathへ制限しません。明示pathはそのdirectoryだけを使い、設定がなければ親へfallbackしません。省略時だけ最も近い `pdx.toml` の親を探索します。ローカルtemplateはProject内directoryに限定し、Dataへの登録/import/addは未実装です。
+
+## templateを切り替える例
+
+`--target` は既存Targetを選ぶ操作で、template自体は `pdx.toml` のTargetへ宣言します。内蔵は `template = { id = "default-report" }`、Project内packageは `template = { path = "templates/custom" }` です。`id` と `path` は同時指定できません。内蔵IDの一覧取得・外部package取得はR1にありません。
+
+試す場合は新規Projectへ、開発checkoutの `templates/default-report/` 全体を `templates/custom/` としてコピーします。manifestのid/versionやmetadata defaults/schemaを編集し、既存の `[targets.report]` のtemplate行を上記path参照へ置き換えます。全資産が宣言と一致するpackageだけを使います。schemaとmetadataが適合することを確認してから次を実行します。
+
+```text
+pdx lock "原稿 path"
+pdx check "原稿 path"
+pdx plan "原稿 path" --target report
+```
+
+同じDocumentで二つの書式を残す場合は、既存Targetを保持したまま次を追加できます。出力先は別にします。
+
+```toml
+[targets.custom]
+document = "report"
+template = { path = "templates/custom" }
+output_dir = "output/custom"
+```
+
+Targetを追加した後も明示 `lock` が必要です。`pdx plan "原稿 path" --target custom` で選択元・digest・入力と出力を比較します。既定を変える場合はrootの `default_target` を `"custom"` に変更します。依存変更はlock不一致として検出し、本文だけの編集ではlockを更新しません。`check` / `plan` は全Targetを検証するため、選択外Targetのエラーも先に修正してください。いずれもPDF生成・書式適合の実証ではありません。
 
 ## metadata
 
