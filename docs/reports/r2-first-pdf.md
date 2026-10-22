@@ -18,7 +18,7 @@ Windows MSVCと既存Ubuntu-24.04/WSLのRust 1.99.0でfmt/check/clippy、全42�
 
 Linux debug source installをcheckout外のtask専用app rootへ行い、PATHを `/usr/bin:/bin` としてRust/toolchainなしで、日本語・空白pathへinit→pin→check→plan→初回buildが成功しました。local packageへtemplateを切り替えた別Targetも、defaultsの変更がplanへ反映されて実PDFが成功し、既存report世代のdigestは不変でした。source installは配布installerの受入ではありません。
 
-実Docker上で、存在しないimageはexit 3、raw TeX不正はexit 1、無限TeXの12秒timeoutはexit 1、実行container観測後のSIGINTはexit 130でした。各失敗後に前回output file digestが不変で、原稿を戻した再実行はexit 0、所有label付きcontainerの残存は0です。raw logs・実PDF・BuildRecord・case別JSONはtaskのローカル `evidence-r2` に保存します。性能測定/改善率ではありません。
+実Docker上で、存在しないimageはexit 3、無限TeXの12秒timeoutはexit 1、実行container観測後のSIGINTはexit 130でした。当初のTeX不正ケースは実際には30秒のbuild_timeoutだったため、TeX異常終了の証拠から除外しました。最終レビュー後に明示raw LaTeX blockのerrmessageを別途注入し、120秒期限内で `tex_failed` / exit 1を確認しました（観測44.223秒、性能保証ではない）。各失敗後に前回output file digestが不変で、原稿を戻した再実行はexit 0、所有label付きcontainerの残存は0です。raw logs・実PDF・BuildRecord・case別JSONはtaskのローカル `evidence-r2` に保存します。性能測定/改善率ではありません。
 
 独立read-onlyレビューでStateの親component、別Stateによる排他迂回、image VOLUME、呼出し別log予算の4点が見つかり修正しました。再確認で解消し、追加P1/P2所見はありません。レビュー自身は実Dockerを実行しておらず、実行証拠と区別します。
 
