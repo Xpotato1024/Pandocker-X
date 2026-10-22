@@ -12,3 +12,4 @@ toml.workspace = true
 sha2.workspace = true
 jsonschema.workspace = true
 serde-saphyr.workspace = true
+percent-encoding.workspace = true

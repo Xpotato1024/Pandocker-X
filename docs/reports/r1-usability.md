@@ -2,7 +2,7 @@
 
 ## 結果と設計判断
 
-既存レビューのschema誤拒否を再現して修正し、通常CLIに日本語の要約・復旧案を実装しました。Windowsでfmt/check/clippyと全33テストが成功し、専用ユーザー領域へのsource install、checkout外・PATH空でのinit/check/planを確認しました。PDF生成は未実装のままです。
+既存レビューのschema誤拒否を再現して修正し、通常CLIに日本語の要約・復旧案を実装しました。追加独立レビューの参照復号・入れ子draftの2件も再現・修正し、Windowsでfmt/check/clippyと全35テストが成功しています。専用ユーザー領域へのsource install、checkout外・PATH空でのinit/check/planを確認しました。PDF生成は未実装のままです。
 
 確認時のdefault branchは `master`、SHA `4fac1495e5418c57bb23e74509091ae333a5e7f4` です。旧版archiveも同じSHAです。新設計の[PR #19](https://github.com/Xpotato1024/Pandocker-X/pull/19)（R0、`bb7d6a4b526786dfcc21f6b44abf372ed9380de2`）と[Draft PR #20](https://github.com/Xpotato1024/Pandocker-X/pull/20)（R1、`724b19d795bafbdd680452000551ea2d96a94f17`）は未mergeでした。本変更はPR #20のSHAから分岐した独立clone・`codex/18-template-diagnostics` で作成し、既存R1/review worktreeへ書き込んでいません。
 
@@ -25,11 +25,15 @@
 - [contract](../../tests/contracts.rs): keywordと同名のproperty/定義/dependency、literalデータを持つローカルpackageでlock/check/plan成功、metadata制約の維持、静的操作の非変更を検証。
 - [実CLI](../../tests/cli.rs): 通常表示のinit→check→plan、local template切替、stale lock→明示lock→再plan、unknown Target・metadata位置・引数失敗の復旧案、stdout/stderr・終了コード・原稿digestを検証。既存JSON試験も成功。
 
-固定Rust 1.99.0 MSVC・既存registryのtask専用コピーを使用し、network不要の `--locked --offline` でcheck/clippy/testを実行しました。fmt、git diff --check、文書UTF-8/LF検査も成功しました。全33テストはbinary 1、architecture 4、CLI 5、contract 18、core unit 5です。skip・ignoreはありません。Cargo.lock、toolchain指定、LICENSE、組版資産は変更していません。
+固定Rust 1.99.0 MSVC・既存registryのtask専用コピーを使用し、network不要の `--locked --offline` でcheck/clippy/testを実行しました。fmt、git diff --check、文書UTF-8/LF検査も成功しました。全35テストはbinary 1、architecture 4、CLI 5、contract 20、core unit 5です。skip・ignoreはありません。URI復号には既存lock内のpercent-encoding 2.3.2を直接依存として追加し、依存version/checksumは変更していません。toolchain指定、LICENSE、組版資産も変更していません。
+
+追加の独立レビューは `fd65a7a5f0268fdfac5ca4fa3a9308151502744e` を固定し、P2を2件指摘しました。guardのJSON Pointerと標準resolverのURI復号差、nested `$schema` のdraft切替です。親側の修正前実行で前者は `metadata_schema`（禁止patternが実行）、後者はlock成功を観測しました。復号後参照の解決/巡回判定と全schema位置のdraft-07固定を追加し、正常なencoded refも受理する回帰試験が成功しました。
 
 source installはrelease profile・task専用root・2 build jobsで成功しました。registry cacheあり、release targetは初回compileで、Cargo報告は2分26秒、呼出し全体は148.9秒でした。既存PATH・user設定は変更していません。source install成功を配布installer・更新/削除の受入とは扱いません。
 
 ## 静的操作の時間観測
+
+以下のsource installと時間観測は `fd65a7a5f0268fdfac5ca4fa3a9308151502744e` のbinaryに対する記録です。追加レビュー修正後の性能は再計測していません。
 
 Windows 11 Home 10.0.26200、i7-9700K（8 core）、約31.9GiB RAM、NTFS、Rust 1.99.0 MSVC release binaryで計測しました。本文18 files＋metadata 1＋bibliography 1、計5MiBの宣言入力を持つ日本語・空白pathのProjectです。空resource directory、設定、lock、内蔵templateはこの20入力の外です。子processのPATHは空で、生成後の全Project file SHA-256は計測前後で一致しました。
 

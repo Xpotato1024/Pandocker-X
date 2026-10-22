@@ -211,6 +211,15 @@ fn schema_budget(
             for (key, value) in map {
                 let is_schema = matches!(position, SchemaPosition::Schema);
                 if is_schema
+                    && key == "$schema"
+                    && value.as_str() != Some("http://json-schema.org/draft-07/schema#")
+                {
+                    return Err(Diagnostic::input(
+                        "unsupported_schema",
+                        "R1 requires draft-07 in every schema position",
+                    ));
+                }
+                if is_schema
                     && matches!(
                         key.as_str(),
                         "$id" | "$dynamicRef" | "$recursiveRef" | "pattern" | "patternProperties"
@@ -231,16 +240,21 @@ fn schema_budget(
                             "only same-document JSON pointer refs are allowed",
                         ));
                     }
-                    if refs.iter().any(|r| r == reference) {
+                    // Match the standard resolver's URI-fragment decoding before
+                    // JSON Pointer traversal. Compare decoded refs for cycles too.
+                    let pointer = percent_encoding::percent_decode_str(&reference[1..])
+                        .decode_utf8()
+                        .map_err(|_| Diagnostic::input("invalid_schema", "non-UTF8 local $ref"))?;
+                    if refs.iter().any(|r| r == pointer.as_ref()) {
                         return Err(Diagnostic::input(
                             "schema_budget",
                             "recursive schema refs are unsupported",
                         ));
                     }
-                    let target = root.pointer(&reference[1..]).ok_or_else(|| {
+                    let target = root.pointer(&pointer).ok_or_else(|| {
                         Diagnostic::input("invalid_schema", "unresolved local $ref")
                     })?;
-                    refs.push(reference.into());
+                    refs.push(pointer.into_owned());
                     schema_budget(
                         target,
                         root,

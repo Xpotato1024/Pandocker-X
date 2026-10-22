@@ -22,6 +22,8 @@ R1で対応するrecipeは `markdown-standalone` のみです。入力はMarkdow
 
 禁止keywordはschema位置だけで判定します。`properties` / `definitions` / `dependencies` のユーザー定義名、`const` / `enum` / `default` / `examples` のデータ内で同じ文字列を使うことは許可します。`$ref` の参照先はschemaとして再検証し、禁止keywordや外部・再帰参照を隠せません。データ部分も深さ・node予算へ含めます。
 
+参照fragmentは標準resolverと同じくpercent-encodingをUTF-8へ復号してからJSON Pointerを解決し、復号後の参照で循環を検出します。各schema位置の `$schema` も上記draft-07宣言に限定し、入れ子で別draftへ切り替えて走査対象keywordを変えることを拒否します。literalデータ内の同名keyはschemaとして参照された場合だけこの制限を受けます。
+
 digestは `sha256:` + 64桁hexです。危険path/リンクをhash前に拒否し、関連fileを相対pathのUTF-8 byte順でsortします。SHA-256入力は `pdx-template-v1\0`、各fileのpath byte長（u64 big-endian）、path bytes、内容byte長（同）、実bytesの順です。manifest/schema/defaults/sample/license等の宣言資産を含み、mtime・絶対path・本文・文書metadataには依存しません。変更時は[明示lock](project.md)が必要です。
 
 実証は次の順です。

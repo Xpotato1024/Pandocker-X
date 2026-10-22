@@ -44,6 +44,7 @@ fn workspace_dependency_direction_and_pure_core() {
                 "sha2",
                 "jsonschema",
                 "serde-saphyr",
+                "percent-encoding",
             ],
         ),
         ("crates/pdx-application", vec!["pdx-core"]),
