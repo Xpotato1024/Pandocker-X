@@ -8,7 +8,7 @@ canonical_for:
 
 # 機能要件
 
-製品はユーザー所有原稿をテンプレートと固定した環境でPDF化するローカルアプリです。以下は実装予定の受入条件であり、R0では全FRが未実装・テストNot Runです。「検証」は将来追加するテストシナリオの識別名です。R1以降に実在するテストpathと結果をこの表へ結び付けます。
+製品はユーザー所有原稿をテンプレートと固定した環境でPDF化するローカルアプリです。以下は全体の受入条件です。R1の対応状況と実在テストは下表の追跡に分け、実行結果を[R1報告](../reports/r1-static-cli.md)に記録します。静的実装だけで全FRを完了とは扱いません。
 
 | ID | 要件・受入条件 | 検証シナリオ | 導入Round |
 | --- | --- | --- | --- |
@@ -31,3 +31,20 @@ canonical_for:
 | FR-17 | 提出用source export | export: 許諾・必要入力の追跡を後続設計 | 後続、R0〜R5必須外 |
 
 コマンドは[CLI契約](../contracts/cli.md)、データは[Project契約](../contracts/project.md)、成功判定は[build契約](../contracts/build.md)に従います。GUI、旧版互換、未知ZIPの自動適合、旧Issue closeは今回の受入条件に含めません。
+
+## R1 traceability
+
+| 要件 | R1対応とテスト |
+| --- | --- |
+| FR-01 | 新規/空directory init。[contracts](../../tests/contracts.rs): init_collision_rollback_and_concurrent_init、init_check_plan_japanese_path_and_preservation |
+| FR-02 / FR-03 | ordered sources、複数Target/default、全Document入力。[contracts](../../tests/contracts.rs): sources_order_crlf_two_targets_and_metadata_merge、configuration_error_matrix_preserves_files |
+| FR-04 | built-in IDとProject内local path。[contracts](../../tests/contracts.rs): local_package_identity_digest_and_explicit_lock |
+| FR-05 | 部分対応: manifest/tool宣言/schema/資産/digestの静的検証。template_and_schema_rejections_and_local_refs。実tool/公式書式適合はR3 |
+| FR-06 | YAML厳格parse、merge、標準schema。[core unit](../../crates/pdx-core/src/metadata.rs)、[contracts](../../tests/contracts.rs): metadata_error_matrix、sources_order_crlf_two_targets_and_metadata_merge |
+| FR-07 | 部分対応: ローカル依存lock、stale検出、本文変更時不変。manuscript_edits_do_not_change_dependency_lock、local_package_identity_digest_and_explicit_lock。runtime/fetchはR2 |
+| FR-08 | 実CLIをcheckout外へcopyしPATHを空にしてinit/check/plan。[cli](../../tests/cli.rs): real_binary_outside_checkout_runs_init_check_plan_and_nearest_root。network利用コードなし。OS network監視は未実施 |
+| FR-12 | R1コマンドの成功/失敗/引数不正JSONと終了2/3/4/5。[cli](../../tests/cli.rs)。runtime失敗はR2 |
+| FR-09 / FR-10 / FR-11 / FR-13 / FR-14 / FR-15 | 未完了: Docker実行、PDF検証、doctor/cancel、clean、配布lifecycle、準備後offline buildはR2以降。静的check/planの実行だけはR1 |
+| FR-16 / FR-17 | 後続設計。未実装 |
+
+path異常系と入力非変更はportable_path_and_output_overlap_matrix、filesystem_alias_and_non_directory_outputs、symlinks_are_rejected_in_all_filesystem_roles（Linux）、windows_junctions_are_rejected_without_symlink_privilege（Windows）へ追跡します。fixtureはtest内でtask temp配下に生成し、通常checkoutへ原稿を生成しません。

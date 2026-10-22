@@ -1,6 +1,6 @@
 # 貢献方法
 
-現在はvNext R0です。利用可能な製品やbuild手順はまだありません。[実装段階](docs/operations/rounds.md)で対象Roundを確認し、1 Issue = 1 PRで進めます。旧版の機能・Issue順を自動的に持ち込みません。
+現在はvNext R1の静的CLIを実装しています。ビルドと利用方法は[README](README.md)、保証範囲は[R1報告](docs/reports/r1-static-cli.md)を確認してください。[実装段階](docs/operations/rounds.md)で対象Roundを確認し、1 Issue = 1 PRで進めます。旧版の機能・Issue順を自動的に持ち込みません。
 
 [正本マップ](docs/README.md)で該当主題を探し、要件ID・契約・検証方法を先にそろえてください。文章は日本語UTF-8・LFとし、仕様のコピーや空の大量stubを追加しません。ADRは採用理由、contractsは実装時の規範です。未実装・未検証を動作保証として書かないでください。
 

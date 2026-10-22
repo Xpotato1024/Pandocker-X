@@ -8,7 +8,9 @@ canonical_for:
 
 # Project・設定・依存固定契約
 
-これは未実装の規範です。構文schemaとfixtureはR1で具体化します。
+R1の静的契約です。構文は[Project schema 1](../../schemas/project-v1.schema.json)、[lock schema 1](../../schemas/lock-v1.schema.json)、[BuildPlan schema 1](../../schemas/plan-v1.schema.json)とRustの型に対応します。JSON schemaはTOMLをJSONの型へ写したfield契約であり、参照・path・所有権の意味検証はcore/adapterが行います。[横断テスト](../../tests/contracts.rs)で両者の整合を確認します。
+
+`pdx.toml` は `schema_version=1`、`default_target`、`documents`、`targets` を必須とします。Documentは `format`（R1は `markdown` のみ）、非空の `sources`、`bibliography`、`resources` を必須とし、`metadata` は任意のYAML pathです。Targetは `document`、`template`（`id` / `path` のどちらか一方）、`output_dir` を必須とし、`metadata` は任意です。IDは1〜80文字のASCII英数字・`-`・`_`。IDを実pathへ暗黙変換しません。未知field、重複key、型不正はTOML parserで拒否します。
 
 ## モデル
 
@@ -28,7 +30,11 @@ canonical_for:
 
 Project設定は `pdx.toml`、文書metadataはYAMLです。本文・図・bibliography・metadataはユーザー所有です。sourcesは宣言された順序を保持し、暗黙のdirectory走査順で組版しません。
 
-Project設定内pathはProjectRoot相対です。初期版では領域外参照・出力、絶対path、traversal、symlink/junction等による危険リンクを拒否します。OSの正規化・大小文字・別名も考慮し、検証後の入力copyや成果物確定時に境界を再確認します。ProjectRoot自体をrepository配下やASCII pathへ制限しません。ローカルtemplate pathもProject内に配置するか、明示addで検証されたData内のID参照に変換し、外部pathをbuild時に直接渡しません。
+Project設定内pathはProjectRoot相対、区切りは `/` のみです。空component、`.` / `..`、先頭slash、backslash、drive/UNC/ADS、制御文字、`<>:"|?*`、Windows予約名（拡張子付き・COM/LPTの上付き数字を含む）、末尾dot/space、8.3別名の曖昧さを持つ `~` を拒否します。Unicode uppercaseで比較した同一/親子pathを検査し、component単位の大小文字aliasも拒否します。実FSで要求と異なるcaseの既存entry、symlink、junction、全reparse point、通常file/directory以外の入力を拒否します。ProjectRootの祖先もリンク検査します。R1は安全な内部リンクも許可しません。
+
+出力は全Targetで同一/親子を禁止し、全Documentのsource、metadata、bibliography、resourceと全Targetのmetadata、ローカルtemplate directory、`pdx.toml` / `pdx.lock` / `.git` / `.pdx` とも同一/親子を禁止します。既存出力の祖先はdirectoryである必要があります。resource directory・既存出力の子孫も危険path/リンクを検査します。走査は10000 entries、深さ64 component以内です。原稿内容のparser・外部参照解析・敵対的な別userとのTOCTOU完全防御はR1の保証外です。R2の入力copy・確定では境界を再確認する必要があります。
+
+ProjectRoot自体をrepository配下やASCII pathへ制限しません。明示pathはそのdirectoryだけを使い、設定がなければ親へfallbackしません。省略時だけ最も近い `pdx.toml` の親を探索します。ローカルtemplateはProject内directoryに限定し、Dataへの登録/import/addは未実装です。
 
 ## metadata
 
@@ -36,8 +42,18 @@ Project設定内pathはProjectRoot相対です。初期版では領域外参照�
 
 user全体設定でフォント・余白など文書の見た目を変更しません。現在日付を暗黙補完せず、必要な日付は文書側に明示します。
 
+R1のYAMLはJSON互換のmappingのみです。serde-saphyrで重複key、複数document（末尾の空documentも含む）、非文字列map key、非有限数、未知タグ/`!include`、anchor/alias、merge keyを拒否します。include filesystem featureは組み込みません。strict booleanを使い、arrayは再帰結合せず全置換します。YAMLは各1MiB、深さ32、10000 nodes、40000 events、scalar合計1MiB、document数1、anchor/alias/merge key数0が上限です。TOMLとlock JSONも各1MiB以内。schemaの予算は[template契約](template.md)へ定義します。
+
 ## pdx.lock
 
-`pdx.lock` はtemplate/toolchain依存だけを固定します。templateの同一性と内容digest、toolchainのimage digest等を記録し、詳細schemaはR1で定めます。本文・図・文書metadataの変更ではlock更新不要です。実際に用いたこれらの入力digestはBuildRecordへ記録します。
+`pdx.lock` はJSONです。`schema_version: 1`、Target IDごとの `templates`（`id` / `version` / `digest`）、`runtime: "unresolved"` を必須とします。未知field・重複key・型不正は拒否します。R2のimageがまだ存在しないため、image名、ゼロdigest、架空registryを記録しません。Target集合・template identity/digestが現状と一致しなければ `stale_lock`、不足なら依存不足です。本文・図・文書metadataの変更ではlock更新不要です。これらの実入力digestを残すBuildRecordはR2です。
 
 template編集は依存変更であり、明示的なlock更新を要します。lock不一致・未固定・不足依存をbuildが自動修復してはいけません。lockは依存を解決・固定する操作、fetchは固定依存を取得・検証する操作です。取得を伴う操作はCLIで明示し、init/check/planはローカルで準備済みの宣言だけを使います。
+
+R1の `lock [path]` は全入力・metadata・template・出力所有権を静的検証した後、ローカル依存だけを固定します。旧lockの不一致は明示更新時だけ許可します。排他的に作成した同一directory内一時fileへ書いてrenameし、失敗時は今回の一時fileだけを削除します。runtimeは未解決のままです。`check` / `plan` は書込みゼロで、`lock` を暗黙実行しません。
+
+## BuildPlan
+
+選択Targetのrecipe、順序付き本文、bibliography/resource、metadata入力pathと結合結果、template source/identity/digest/宣言file、出力、必要tool、runtime resolutionを型で返します。全Targetのcheckを通してから選択し、未指定時は同じ設定snapshotのdefault_targetを使います。絶対path・mtime・現在日付を計画に混ぜず、同じ宣言から決定的なJSON dataを得ます。shell command文字列は作りません。
+
+`schema_version=1`、`static_only=true`、`runtime_verified=false`、`build_ready=false` と未検証項目を持ちます。R1成功は静的整合であり、Docker、tool存在、PDF、書式適合の証拠ではありません。

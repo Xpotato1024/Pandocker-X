@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "pdx JSON result schema 1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "command", "status", "message", "data", "error", "unverified"],
+  "properties": {
+    "schema_version": {"const": 1}, "command": {"enum": ["init", "check", "plan", "lock", "arguments"]},
+    "status": {"enum": ["success", "error"]}, "message": {"type": "string"},
+    "unverified": {"type": "array", "items": {"type": "string"}},
+    "data": {"type": ["object", "null"]},
+    "error": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "required": ["code", "message", "exit_code", "instance_path"],
+      "properties": {
+        "code": {"type": "string"}, "message": {"type": "string"}, "exit_code": {"enum": [2, 3, 4, 5]},
+        "instance_path": {"type": ["string", "null"]}
+      }
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"status": {"const": "success"}}}, "then": {"properties": {"error": {"type": "null"}, "data": {"type": "object"}}}},
+    {"if": {"properties": {"status": {"const": "error"}}}, "then": {"properties": {"error": {"type": "object"}, "data": {"type": "null"}}}}
+  ]
+}

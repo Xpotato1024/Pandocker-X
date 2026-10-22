@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "template.toml schema 1 (JSON representation)",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "id", "version", "recipe", "engine", "required_tools", "metadata_schema", "defaults", "resources", "license", "provenance", "sample"],
+  "properties": {
+    "schema_version": {"const": 1}, "id": {"type": "string"}, "version": {"type": "string", "minLength": 1},
+    "recipe": {"const": "markdown-standalone"}, "engine": {"const": "lualatex"},
+    "required_tools": {"type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": {"enum": ["pandoc", "lualatex"]}},
+    "metadata_schema": {"type": "string"}, "defaults": {"type": "string"},
+    "resources": {"type": "array", "items": {"type": "string"}},
+    "license": {"type": "string", "minLength": 1}, "provenance": {"type": "string", "minLength": 1}, "sample": {"type": "string"}
+  }
+}

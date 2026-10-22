@@ -8,7 +8,7 @@ canonical_for:
 
 # build・隔離・成果物契約
 
-R0では未実装です。R2で実PDFと異常系を用いて確認します。
+R1はvalidateと静的resolve/planだけを実装します。実行・snapshot・成果物確定は未実装で、R2で実PDFと異常系を用いて確認します。R1のBuildPlanは[Project契約](project.md)に従い、runtime未解決・build_ready=falseを維持します。
 
 ## 処理順
 

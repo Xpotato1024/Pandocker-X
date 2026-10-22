@@ -8,11 +8,11 @@ canonical_for:
 
 # 文書正本マップ
 
-各主題の規範は以下の一箇所に置きます。他文書はリンクで参照し、同じ仕様をコピーしません。R0の文書は承認済み設計です。製品による実装保証はなく、実測・実行証拠はreportsで区別します。
+各主題の規範は以下の一箇所に置きます。他文書はリンクで参照し、同じ仕様をコピーしません。R1の静的操作の具体契約と、R2以降の設計要求を区別します。実測・実行証拠はreportsで区別します。
 
 | 主題 | 正本 | 内容 |
 | --- | --- | --- |
-| 製品入口・現在能力 | [README](../README.md) | R0の状態と旧版への参照 |
+| 製品入口・現在能力 | [README](../README.md) | R1の使い方、未実装範囲、旧版への参照 |
 | 機能要件 | [functional](requirements/functional.md) | FRと受入シナリオ |
 | 品質・安全・性能要件 | [non-functional](requirements/non-functional.md) | NFRと未実測予算 |
 | 構成・依存・領域 | [system](architecture/system.md) | 配置、責務、OS方針 |
@@ -28,3 +28,5 @@ canonical_for:
 実装pathは[構成](architecture/system.md)、要件からテストへの対応は要件表を正本とします。未作成の将来pathを実在リンクとして扱いません。reportsは観測結果であり、契約を上書きしません。
 
 過去の実施証拠: [R0報告](reports/r0-foundation.md)。この報告は現在仕様の正本ではありません。
+
+R1の実装・検証範囲: [R1報告](reports/r1-static-cli.md)。fieldの機械契約は各contractから `schemas/` へ参照します。

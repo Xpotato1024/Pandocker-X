@@ -8,7 +8,7 @@ canonical_for:
 
 # 非機能要件
 
-以下は設計要求です。R0時点で製品実装による保証・性能実測はありません。R1以降、各シナリオを実テストpath・対象revision・OS・runtimeと結び付け、設計上の制約と検証済み範囲を分けます。
+以下は設計要求です。R1は静的操作の原稿保全・path・責務分離を実装します。全体要求の保証や性能実測とは区別し、各シナリオの観測を[R1報告](../reports/r1-static-cli.md)へ結び付けます。
 
 | ID | 要求 | 検証シナリオ・導入Round |
 | --- | --- | --- |
@@ -35,3 +35,11 @@ canonical_for:
 - 組版はTargetごとにmemory 2GiB、2CPU、10min、256process、log 32MiBを初期上限とする。初期はTarget逐次実行。超過を成功として扱わない。
 
 依存固定はPDF bytesの完全一致を既に保証するものではありません。フォント・toolchain・metadata・日時等の影響を実証し、非決定性と未検証項目をBuildRecord/報告に残します。現在日付の暗黙補完は禁止です。詳細な隔離・失敗処理は[build契約](../contracts/build.md)を参照します。
+
+## R1の追跡と未完了範囲
+
+- NFR-01 / NFR-02 / NFR-07: [FS integration](../../tests/contracts.rs)の全file digest前後比較、途中init失敗・同時init、case alias/output衝突、日本語/空白、Windows junction/Linux symlink。更新/削除・runtime中断・配布受入はR2/R4。
+- NFR-04: template digestの場所非依存、本文/図/metadata変更時のlock不変、planの決定性を同テストで検証。BuildRecord/PDF再現性はR2/R3。
+- NFR-11 / NFR-12 / NFR-14: [architecture/docs](../../tests/architecture.rs)がworkspace依存方向、pure core、全横断testのCargo登録、正本source map、内部リンク、日本語UTF-8/LF、Just/CIの範囲を確認。
+- NFR-08: 30回の性能測定はNot Run。予算を合格済みとはしない。
+- NFR-03 / NFR-05 / NFR-06 / NFR-09 / NFR-10 / NFR-13: runtime freshness/隔離/通信監視/資源制限/回復/配布の受入は未実施。R1 parserのsize/depth/node上限は[Project](../contracts/project.md)と[template](../contracts/template.md)に限定して具体化。

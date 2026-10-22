@@ -10,5 +10,4 @@
 *.jpg binary
 *.jpeg binary
 *.zip binary
-# R0では既存LICENSEのbytesを変更しない。
-LICENSE -text
+# LICENSEも通常のテキスト正規化に従い、元のGit blobを維持する。

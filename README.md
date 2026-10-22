@@ -4,11 +4,24 @@
 
 ## 現在の状態
 
-**R0は仕様・文書・開発運用の基盤のみです。vNextのCLI、Rust workspace、組版image、テンプレート、インストーラは未実装です。実行できるクイックスタートはまだありません。** 文書にあるコマンド・型・安全保証・性能値は、後続Roundで実装・検証する契約または目標です。
+**R1はRust共通層とDocker不要の `init` / `check` / `plan`、ローカル依存の明示 `lock` を実装しています。PDF組版はR2です。** 組版image、fetch/build/doctor/clean、インストーラ、Windows配布受入は未実装です。静的成功でも `static_only=true`、`runtime_verified=false`、`build_ready=false` を返します。検証結果と未実施範囲は[R1報告](docs/reports/r1-static-cli.md)を参照してください。
 
 2026-10-15承認の非互換な再開発です。旧実装・仕様・CLI互換性は継承しません。旧版は `archive/pre-rebuild-2026-10-15`、SHA `4fac1495e5418c57bb23e74509091ae333a5e7f4` に保全し、Git履歴と[LICENSE](LICENSE)を保持します。旧コードを新版treeへ移植せず、`legacy/` も残しません。保全の確認結果は[R0報告](docs/reports/r0-foundation.md)に記録します。
 
-保護pathの削除・規約の置換は親の適用待ちで、現行treeには一部の旧ファイルが残っています。適用待ち一覧と検証範囲は[R0報告](docs/reports/r0-foundation.md)を参照してください。
+## R1の使い方
+
+Rust 1.99.0とMSVCまたはLinuxのlinkerが必要です。`Cargo.lock` を保持し、開発時の依存取得と製品のoffline実行を区別します。
+
+```text
+cargo build -p pdx --locked
+pdx init "原稿 path" --template default-report
+pdx check "原稿 path" --json
+pdx plan "原稿 path" --target report --json
+```
+
+`pdx` は生成された `target/debug/pdx`（Windowsは `pdx.exe`）を指します。バイナリ単体をcheckout外へ移しても内蔵templateを使えます。initは親directoryが存在する新規/空directoryに限定します。原稿directory内ではpathを省略でき、最も近い祖先の `pdx.toml` を使います。既存原稿へ導入する場合は新規directoryで雛形を確認してから手動で設定してください。
+
+`check` / `plan` は全Targetを検証し、ファイルを変更しません。ローカルtemplate編集・Target依存変更後だけ `pdx lock "原稿 path" --json` で依存を明示更新します。lockは取得を行わず、未解決runtimeを解決済みにしません。[CLI契約](docs/contracts/cli.md)、[Project契約](docs/contracts/project.md)、[template契約](docs/contracts/template.md)に制限と失敗分類を定義します。
 
 ## 読み始める場所
 
