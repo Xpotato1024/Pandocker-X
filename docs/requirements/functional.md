@@ -34,6 +34,8 @@ canonical_for:
 
 ## R1 traceability
 
+最小R2の追加追跡: FR-07/09/10/11/12/15は[build制御tests](../../tests/build_control.rs)の明示pin、旧lock、選択snapshot、排他、失敗/取消/不正PDF/入力変更/世代衝突/再実行と、[R2実PDF報告](../reports/r2-first-pdf.md)に追跡します。doctor/fetch/clean、全Target実行、配布lifecycleは未実装のままです。以下はR1時点の対応表です。
+
 | 要件 | R1対応とテスト |
 | --- | --- |
 | FR-01 | 新規/空directory init。[contracts](../../tests/contracts.rs): init_collision_rollback_and_concurrent_init、init_check_plan_japanese_path_and_preservation |

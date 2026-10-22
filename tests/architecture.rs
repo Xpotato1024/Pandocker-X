@@ -48,7 +48,10 @@ fn workspace_dependency_direction_and_pure_core() {
             ],
         ),
         ("crates/pdx-application", vec!["pdx-core"]),
-        ("crates/pdx-adapters", vec!["pdx-core", "pdx-application"]),
+        (
+            "crates/pdx-adapters",
+            vec!["pdx-core", "pdx-application", "tempfile", "serde_json"],
+        ),
     ] {
         let manifest: toml::Value =
             toml::from_str(&fs::read_to_string(root().join(package).join("Cargo.toml")).unwrap())
@@ -108,7 +111,7 @@ fn every_cross_crate_test_file_is_a_cargo_target() {
             );
         }
     }
-    assert_eq!(declared.len(), 3);
+    assert_eq!(declared.len(), 4);
 }
 
 #[test]

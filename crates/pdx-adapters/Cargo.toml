@@ -8,3 +8,5 @@ license.workspace = true
 [dependencies]
 pdx-core.workspace = true
 pdx-application.workspace = true
+tempfile.workspace = true
+serde_json.workspace = true

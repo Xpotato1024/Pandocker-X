@@ -27,3 +27,7 @@ path = "architecture.rs"
 [[test]]
 name = "cli"
 path = "cli.rs"
+
+[[test]]
+name = "build"
+path = "build_control.rs"

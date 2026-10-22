@@ -69,6 +69,8 @@ R1のYAMLはJSON互換のmappingのみです。serde-saphyrで重複key、複数
 
 ## pdx.lock
 
+最小R2でlocal runtimeを明示固定した場合はlock/plan schema 2を使います。旧schema 1は引き続き未解決runtimeとして受理します。具体的な形と保持・更新境界は[最小R2契約](runtime-r2.md)へ定義します。以下はR1 schema 1の契約です。
+
 `pdx.lock` はJSONです。`schema_version: 1`、Target IDごとの `templates`（`id` / `version` / `digest`）、`runtime: "unresolved"` を必須とします。未知field・重複key・型不正は拒否します。R2のimageがまだ存在しないため、image名、ゼロdigest、架空registryを記録しません。Target集合・template identity/digestが現状と一致しなければ `stale_lock`、不足なら依存不足です。本文・図・文書metadataの変更ではlock更新不要です。これらの実入力digestを残すBuildRecordはR2です。
 
 template編集は依存変更であり、明示的なlock更新を要します。lock不一致・未固定・不足依存をbuildが自動修復してはいけません。lockは依存を解決・固定する操作、fetchは固定依存を取得・検証する操作です。取得を伴う操作はCLIで明示し、init/check/planはローカルで準備済みの宣言だけを使います。

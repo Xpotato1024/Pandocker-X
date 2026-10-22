@@ -4,7 +4,7 @@
   "type": "object", "additionalProperties": false,
   "required": ["schema_version", "command", "status", "message", "data", "error", "unverified"],
   "properties": {
-    "schema_version": {"const": 1}, "command": {"enum": ["init", "check", "plan", "lock", "arguments"]},
+    "schema_version": {"const": 1}, "command": {"enum": ["init", "check", "plan", "lock", "arguments", "pin-runtime", "build"]},
     "status": {"enum": ["success", "error"]}, "message": {"type": "string"},
     "unverified": {"type": "array", "items": {"type": "string"}},
     "data": {"type": ["object", "null"]},
@@ -12,7 +12,7 @@
       "type": ["object", "null"], "additionalProperties": false,
       "required": ["code", "message", "exit_code", "instance_path"],
       "properties": {
-        "code": {"type": "string"}, "message": {"type": "string"}, "exit_code": {"enum": [2, 3, 4, 5]},
+        "code": {"type": "string"}, "message": {"type": "string"}, "exit_code": {"enum": [1, 2, 3, 4, 5, 130]},
         "instance_path": {"type": ["string", "null"]}
       }
     }

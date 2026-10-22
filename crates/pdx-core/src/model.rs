@@ -46,6 +46,9 @@ pub fn parse_toml<T: serde::de::DeserializeOwned>(text: &str) -> Result<T> {
     }
     toml::from_str(text).map_err(|e| Diagnostic::input("invalid_toml", e.to_string()))
 }
+pub fn encode_project(project: &Project) -> Result<String> {
+    toml::to_string(project).map_err(|e| Diagnostic::new("serialization", 5, e.to_string()))
+}
 pub fn validate_id(id: &str) -> Result<()> {
     if id.is_empty()
         || id.len() > 80
@@ -164,6 +167,7 @@ pub struct TemplateIdentity {
 #[serde(rename_all = "snake_case")]
 pub enum RuntimeResolution {
     Unresolved,
+    Docker(crate::RuntimePin),
 }
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -195,11 +199,17 @@ impl DependencyLock {
         }
     }
     pub fn validate(&self, packages: &BTreeMap<String, TemplatePackage>) -> Result<()> {
-        if self.schema_version != 1 {
+        if !matches!(
+            (&self.runtime, self.schema_version),
+            (RuntimeResolution::Unresolved, 1) | (RuntimeResolution::Docker(_), 2)
+        ) {
             return Err(Diagnostic::input(
                 "unsupported_schema",
-                "lock schema_version must be 1",
+                "lock version/runtime combination is unsupported",
             ));
+        }
+        if let RuntimeResolution::Docker(pin) = &self.runtime {
+            pin.validate()?;
         }
         if self.templates != Self::from_packages(packages).templates {
             return Err(Diagnostic::new(

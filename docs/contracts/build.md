@@ -8,11 +8,11 @@ canonical_for:
 
 # build・隔離・成果物契約
 
-R1はvalidateと静的resolve/planだけを実装します。実行・snapshot・成果物確定は未実装で、R2で実PDFと異常系を用いて確認します。R1のBuildPlanは[Project契約](project.md)に従い、runtime未解決・build_ready=falseを維持します。
+R1の静的resolve/planへ最小R2 buildを追加しました。今回実装したコマンド・lock版・隔離・予算・世代確定と制約の正本は[最小R2の具体契約](runtime-r2.md)です。以下の工程表は当初の計画と全体要件を示し、fetch/doctor/clean等の未実装項目を成功扱いしません。
 
 ## 初回PDFまでの最小R2実装範囲
 
-以下は計画であり、現在のCLIへ登録された機能ではありません。現在は `build` command、Docker adapter、runtime lock、snapshot、PDF検査、BuildRecord、成果物確定のすべてが未実装です。Dockerを用意するだけではR1からPDFを生成できません。開発用Linux検証containerを起動できることも、組版runtimeが存在する証拠ではありません。
+最小経路として `build` command、Docker adapter、local runtime lock、snapshot、qpdf検査、BuildRecord、世代確定を実装します。配布imageを取得するfetchと自動更新は含みません。開発用Linux compiler containerの起動と、組版runtimeの実PDF検証は別の証拠です。
 
 初回の縦断実装は一つのDocument・Target、内蔵default-report、Markdown→standalone LaTeX→LuaLaTeX→PDFに絞ります。GUI、複数engine、template配布管理、watch、installer自動更新を先に増やしません。本文・metadata・図・bibliographyは既存の宣言モデルを使い、template名によるRust分岐は追加しません。
 

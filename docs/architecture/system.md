@@ -12,15 +12,15 @@ canonical_for:
 
 CLI-firstのローカルアプリとし、後続GUIは同じapplication APIを呼びます。常駐HTTP、DB、汎用DAG、Compose、独自TeX/Markdownパーサーは導入しません。文書形式の処理は既存toolへ委譲し、共通preambleや特定engineを全テンプレートへ強制しません。
 
-## 配置（R1の静的workspace）
+## 配置（R1と最小R2）
 
 | path | 責務 |
 | --- | --- |
 | `apps/pdx` | CLI引数、表示、終了コード。製品ロジックを持たない |
 | `crates/pdx-core` | 純粋な型・検証・plan。FS、環境変数、外部process、CLI出力を行わない |
 | `crates/pdx-application` | use case、port、処理順、application API |
-| `crates/pdx-adapters` | R1はFS/内蔵templateのport実装。Docker adapterはR2 |
-| `runtime` | R2以降の計画。固定する組版環境の定義・検証（未作成） |
+| `crates/pdx-adapters` | FS/内蔵template、snapshot・世代確定、Docker subprocessとcleanup |
+| `runtime` | 最小R2のlocal開発用Dockerfile。配布imageの公開は含めない |
 | `templates` | 検証済みTemplatePackageと資産・許諾 |
 | `packaging` | R4以降の計画。OSごとの配布・user lifecycle（未作成） |
 | `schemas` | version付き機械可読契約 |
@@ -28,7 +28,7 @@ CLI-firstのローカルアプリとし、後続GUIは同じapplication APIを�
 
 root `Cargo.toml` に `apps/pdx`、3つのcrate、`tests` をworkspace memberとして明示しています。coreのcrate-local unit、横断contract/FS integration、実CLI、architecture/docsのCargo targetを分離します。CLI packageのbinary登録testにより横断テストから本物のpdx executableを起動します。
 
-applicationの `ProjectStore` はProjectRoot探索、bounded read、入力/出力検査、template解決、排他的init、明示lock保存を表し、`Application` がcheck/plan/init/lockの処理順を所有します。adapterは各portのFS差を実装し、coreはbytes/値からの構文・path・metadata/schema・digest・planだけを扱います。製品コードは外部processを起動しません。Windows junction作成は隔離されたテストharnessだけです。
+applicationの `ProjectStore` は静的FS境界、`BuildStore` / `BuildWorkspace` はsnapshotと世代、`BuildRuntime` はprobe/renderを表します。`Application` がvalidate→probe→snapshot→実行→PDF検査→確定→cleanupの順序を所有し、adapterの具体型へ依存しません。Docker subprocessは一つのadapterへ集約し、coreはbytes/値からの構文・path・metadata/schema・digest・plan/argvだけを扱います。実行条件とState/output排他の具体境界は[最小R2契約](../contracts/runtime-r2.md)に従います。
 
 依存方向はCLI → application → core。adaptersはapplicationのportを実装し、coreへ副作用を持ち込みません。組立てはCLIの起動層で行い、CLIと後続GUIは同一use caseを使います。applicationはadapterの具体型に依存しません。[開発用Justの判断](../decisions/0003-thin-just.md)もこの方向を守ります。
 
