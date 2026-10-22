@@ -23,6 +23,16 @@ pdx plan "原稿 path" --target report --json
 
 `check` / `plan` は全Targetを検証し、ファイルを変更しません。ローカルtemplate編集・Target依存変更後だけ `pdx lock "原稿 path" --json` で依存を明示更新します。lockは取得を行わず、未解決runtimeを解決済みにしません。[CLI契約](docs/contracts/cli.md)、[Project契約](docs/contracts/project.md)、[template契約](docs/contracts/template.md)に制限と失敗分類を定義します。
 
+開発版をユーザー所有の専用directoryへ配置する場合は、checkoutで次を実行できます。Rustとlinkerが必要なsource installであり、R4の配布installer・更新機構ではありません。
+
+```text
+cargo install --path apps/pdx --locked --root "<ユーザー所有の専用app directory>"
+```
+
+配置先はそのdirectoryの `bin/pdx`（Windowsは `bin/pdx.exe`）です。PATHを変更する前でも実行ファイルの絶対pathで起動できます。原稿は配置先の外に作成し、更新時も `pdx.toml` と `pdx.lock` を原稿とともに保持してください。template依存はlockで固定しますが、runtimeは未解決で、PDF再現性はまだ検証していません。
+
+通常表示は日本語の要約と次の操作です。`plan` で選択Target・templateの由来/digest・入力順・出力先を確認できます。失敗はstderrへコード・metadata位置・復旧案を出し、非0で終了します。自動処理には `--json` を使ってください。全fieldと結合metadataを含む版付きJSON一objectをstdoutへ返します。templateの切替手順は[Project契約の例](docs/contracts/project.md#templateを切り替える例)を参照してください。`build` はまだ利用できません。
+
 ## 読み始める場所
 
 - [文書正本マップ](docs/README.md): 主題ごとの唯一の正本

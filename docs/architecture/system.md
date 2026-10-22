@@ -1,7 +1,7 @@
 ---
 status: canonical
 owner: maintainers
-last_verified: 2026-10-15
+last_verified: 2026-10-22
 canonical_for:
   - docs/architecture/system.md
 ---
@@ -31,6 +31,8 @@ root `Cargo.toml` に `apps/pdx`、3つのcrate、`tests` をworkspace memberと
 applicationの `ProjectStore` はProjectRoot探索、bounded read、入力/出力検査、template解決、排他的init、明示lock保存を表し、`Application` がcheck/plan/init/lockの処理順を所有します。adapterは各portのFS差を実装し、coreはbytes/値からの構文・path・metadata/schema・digest・planだけを扱います。製品コードは外部processを起動しません。Windows junction作成は隔離されたテストharnessだけです。
 
 依存方向はCLI → application → core。adaptersはapplicationのportを実装し、coreへ副作用を持ち込みません。組立てはCLIの起動層で行い、CLIと後続GUIは同一use caseを使います。applicationはadapterの具体型に依存しません。[開発用Justの判断](../decisions/0003-thin-just.md)もこの方向を守ります。
+
+CLIの `display` moduleは通常表示と復旧案を担当し、`--json` は版付きenvelopeを使います。どちらも同じapplication結果を表示し、template選択・lock検証・修復処理を表示層へ複製しません。
 
 ## 領域と所有
 

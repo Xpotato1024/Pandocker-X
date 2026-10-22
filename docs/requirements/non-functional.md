@@ -1,7 +1,7 @@
 ---
 status: canonical
 owner: maintainers
-last_verified: 2026-10-15
+last_verified: 2026-10-22
 canonical_for:
   - docs/requirements/non-functional.md
 ---
@@ -27,7 +27,7 @@ canonical_for:
 | NFR-13 | 配布物・checksum・依存資産・許諾の整合を確認する | distribution: clean install/upgrade/uninstallと許諾、R3/R4 |
 | NFR-14 | 1主題1正本、ADR/契約/実行証拠を分離する | docs: 重複・内部リンク・現行能力の確認、R0以降 |
 
-## 初期予算（すべて未実測）
+## 初期予算
 
 - warm help: p95 300ms。
 - 合計5MiB・20filesのcheck/plan: p95 1s。
@@ -41,5 +41,5 @@ canonical_for:
 - NFR-01 / NFR-02 / NFR-07: [FS integration](../../tests/contracts.rs)の全file digest前後比較、途中init失敗・同時init、case alias/output衝突、日本語/空白、Windows junction/Linux symlink。更新/削除・runtime中断・配布受入はR2/R4。
 - NFR-04: template digestの場所非依存、本文/図/metadata変更時のlock不変、planの決定性を同テストで検証。BuildRecord/PDF再現性はR2/R3。
 - NFR-11 / NFR-12 / NFR-14: [architecture/docs](../../tests/architecture.rs)がworkspace依存方向、pure core、全横断testのCargo登録、正本source map、内部リンク、日本語UTF-8/LF、Just/CIの範囲を確認。
-- NFR-08: 30回の性能測定はNot Run。予算を合格済みとはしない。
+- NFR-08: Windows release binaryのhelp/check/planを各30回観測し、本試行は初期予算内。[R1追補](../reports/r1-usability.md)に入力・計測範囲・競合・数値を記録。Linux、組版、占有環境での比較は未実施で、一般的な性能保証とはしない。
 - NFR-03 / NFR-05 / NFR-06 / NFR-09 / NFR-10 / NFR-13: runtime freshness/隔離/通信監視/資源制限/回復/配布の受入は未実施。R1 parserのsize/depth/node上限は[Project](../contracts/project.md)と[template](../contracts/template.md)に限定して具体化。

@@ -1,7 +1,7 @@
 ---
 status: canonical
 owner: maintainers
-last_verified: 2026-10-15
+last_verified: 2026-10-22
 canonical_for:
   - docs/requirements/functional.md
 ---
@@ -39,11 +39,11 @@ canonical_for:
 | FR-01 | 新規/空directory init。[contracts](../../tests/contracts.rs): init_collision_rollback_and_concurrent_init、init_check_plan_japanese_path_and_preservation |
 | FR-02 / FR-03 | ordered sources、複数Target/default、全Document入力。[contracts](../../tests/contracts.rs): sources_order_crlf_two_targets_and_metadata_merge、configuration_error_matrix_preserves_files |
 | FR-04 | built-in IDとProject内local path。[contracts](../../tests/contracts.rs): local_package_identity_digest_and_explicit_lock |
-| FR-05 | 部分対応: manifest/tool宣言/schema/資産/digestの静的検証。template_and_schema_rejections_and_local_refs。実tool/公式書式適合はR3 |
+| FR-05 | 部分対応: manifest/tool宣言/schema/資産/digestの静的検証。template_and_schema_rejections_and_local_refs、schema_names_and_literal_data_are_not_schema_keywords、[template unit](../../crates/pdx-core/src/template.rs)のschema位置別拒否・予算試験。実tool/公式書式適合はR3 |
 | FR-06 | YAML厳格parse、merge、標準schema。[core unit](../../crates/pdx-core/src/metadata.rs)、[contracts](../../tests/contracts.rs): metadata_error_matrix、sources_order_crlf_two_targets_and_metadata_merge |
 | FR-07 | 部分対応: ローカル依存lock、stale検出、本文変更時不変。manuscript_edits_do_not_change_dependency_lock、local_package_identity_digest_and_explicit_lock。runtime/fetchはR2 |
 | FR-08 | 実CLIをcheckout外へcopyしPATHを空にしてinit/check/plan。[cli](../../tests/cli.rs): real_binary_outside_checkout_runs_init_check_plan_and_nearest_root。network利用コードなし。OS network監視は未実施 |
-| FR-12 | R1コマンドの成功/失敗/引数不正JSONと終了2/3/4/5。[cli](../../tests/cli.rs)。runtime失敗はR2 |
+| FR-12 | R1コマンドの成功/失敗/引数不正JSONと終了2/3/4/5。[cli](../../tests/cli.rs)。human_output_guides_template_switch_and_error_recoveryは通常表示のstdout/stderr、template切替・明示lock・metadata位置と復旧案を検証。runtime失敗はR2 |
 | FR-09 / FR-10 / FR-11 / FR-13 / FR-14 / FR-15 | 未完了: Docker実行、PDF検証、doctor/cancel、clean、配布lifecycle、準備後offline buildはR2以降。静的check/planの実行だけはR1 |
 | FR-16 / FR-17 | 後続設計。未実装 |
 

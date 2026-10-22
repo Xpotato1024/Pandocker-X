@@ -528,6 +528,49 @@ fn missing_corrupt_lock_and_metadata_budgets() {
 }
 
 #[test]
+fn schema_names_and_literal_data_are_not_schema_keywords() {
+    let temp = sandbox();
+    let root = project(temp.path());
+    let template = local_template(&root);
+    fs::write(
+        template.join("metadata.schema.json"),
+        json!({
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {
+                "pattern": {"type": "string"},
+                "$id": {"type": "string"},
+                "$ref": {"type": "string"},
+                "patternProperties": {"type": "object"},
+                "$dynamicRef": {"type": "string"},
+                "$recursiveRef": {"type": "string"}
+            },
+            "definitions": {
+                "pattern": {"type": "string"},
+                "$ref": {"type": "string"}
+            },
+            "dependencies": {"pattern": ["$ref"]},
+            "default": {"pattern": ".*", "$ref": "https://example.invalid/schema"},
+            "examples": [{"$id": "data"}],
+            "not": {"const": {"$ref": "literal", "pattern": "literal"}},
+            "enum": [{"title": "新しいレポート", "author": ["著者名"], "lang": "ja-JP", "settings": {"toc": true, "numbersections": false}}]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    app().lock(Some(&root)).unwrap();
+    let before = snapshot(&root);
+    app().check(Some(&root)).unwrap();
+    app().plan(Some(&root), None).unwrap();
+    assert_eq!(before, snapshot(&root));
+    // Schema constraints still apply after accepting names and literal data.
+    fs::write(root.join("metadata/common.yaml"), "title: different\n").unwrap();
+    let error = app().check(Some(&root)).err().unwrap();
+    assert_eq!(error.code, "metadata_schema");
+    assert!(error.instance_path.is_some());
+}
+
+#[test]
 fn explicit_project_path_does_not_search_parents() {
     let temp = sandbox();
     let root = project(temp.path());
