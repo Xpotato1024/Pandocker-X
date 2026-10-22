@@ -1,4 +1,8 @@
-//! ローカルFSの境界検証と、組込templateの解決。外部process/networkを使わない。
+//! ローカルFSと組込template、および明示build用Docker adapter。
+mod build;
+mod docker;
+pub use build::default_state_root;
+pub use docker::DockerRuntime;
 use pdx_application::ProjectStore;
 use pdx_core::*;
 use std::{

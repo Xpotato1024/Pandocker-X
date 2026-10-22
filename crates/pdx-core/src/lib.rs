@@ -1,9 +1,11 @@
 //! 純粋なモデル、検証、依存同一性、静的計画。I/Oを所有しない。
+mod build;
 mod metadata;
 mod model;
 mod paths;
 mod template;
 
+pub use build::*;
 pub use metadata::*;
 pub use model::*;
 pub use paths::*;

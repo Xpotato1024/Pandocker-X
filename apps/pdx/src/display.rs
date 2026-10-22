@@ -41,6 +41,22 @@ pub fn write_result(
         }
     };
     match command {
+        "build" => {
+            writeln!(stdout, "PDF世代を確定しました: {}", field(data, "pdf"))?;
+            writeln!(stdout, "BuildRecord: {}", field(data, "record"))?;
+            return writeln!(
+                stdout,
+                "runtime_verified={} / pdf_verified={}",
+                data["runtime_verified"], data["pdf_verified"]
+            );
+        }
+        "pin-runtime" => {
+            writeln!(stdout, "local runtimeをprobeしてlockへ固定しました。")?;
+            return writeln!(
+                stdout,
+                "次: pdx build [path]。配布・別端末の再現性は未検証です。"
+            );
+        }
         "init" => {
             writeln!(
                 stdout,
@@ -114,12 +130,25 @@ pub fn write_result(
     }
     writeln!(
         stdout,
-        "静的操作のみ。PDF生成は未実装 (R2)。runtime未確認、build_ready=false。"
+        "静的操作のみ。runtime未確認、build_ready=false。PDF生成はruntime固定後に pdx build [path]。"
     )
 }
 
 fn recovery_hint(code: &str) -> Option<&'static str> {
     match code {
+        "missing_runtime" | "runtime_tool_missing" | "unsupported_runtime" => Some(
+            "local Dockerとruntime/Dockerfileのtool・日本語fontを確認し、完全local image IDを pdx lock [path] --runtime-image <ID> で明示固定してください。",
+        ),
+        "pandoc_failed" | "tex_failed" | "invalid_pdf" => Some(
+            "pdx plan [path] --json で入力順とmetadataを確認し、raw TeX・図/参照・固定runtimeのpackageを点検してください。前回PDFは保持しています。",
+        ),
+        "build_timeout" | "cancelled" => Some(
+            "前回世代を保持しています。原稿とruntimeを確認して再実行してください。timeoutは --timeout-seconds 1..600 で指定します。",
+        ),
+        "input_changed" => Some("組版中の原稿編集を止め、現在の入力で再実行してください。"),
+        "build_busy" => Some(
+            "同一Targetの先行buildが終わってから再実行してください。lock fileの削除で回避しないでください。",
+        ),
         "invalid_arguments" => {
             Some("pdx --help または pdx <command> --help で引数を確認してください。")
         }

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "build-result schema 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "build_id",
+    "target",
+    "artifact_dir",
+    "pdf",
+    "record",
+    "runtime_verified",
+    "pdf_verified",
+    "static_only",
+    "unverified"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "build_id": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "artifact_dir": {
+      "type": "string"
+    },
+    "pdf": {
+      "type": "string"
+    },
+    "record": {
+      "type": "string"
+    },
+    "runtime_verified": {
+      "type": "boolean"
+    },
+    "pdf_verified": {
+      "type": "boolean"
+    },
+    "static_only": {
+      "const": false
+    },
+    "unverified": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -8,16 +8,16 @@ canonical_for:
 
 # CLI・結果契約
 
-R1で実装するのは `init` / `check` / `plan` / ローカル `lock` です。CLIと後続GUIは同じapplication APIを呼びます。以下の他コマンドは将来計画であり、CLIへ成功するstubとして登録しません。
+R1の `init` / `check` / `plan` / ローカル `lock` に、最小R2のruntime固定と単一Target `build` を追加します。追加オプションと処理境界は[最小R2契約](runtime-r2.md)を正本とします。CLIと後続GUIは同じapplication APIを呼びます。以下の未実装コマンドは将来計画であり、成功するstubとして登録しません。
 
 | 計画コマンド | 効果・境界 |
 | --- | --- |
 | `pdx init <path> --template default-report` | R1実装。内蔵雛形から新規/空directoryへ作成。template省略時もdefault-report |
 | `pdx check [path]` | 設定・入力参照・metadata・template/lock整合を静的検証 |
 | `pdx plan [path] --target <id> --json` | 検証済みBuildPlanを出力。runtime可用性や成功は保証しない |
-| `pdx lock [path]` | R1実装。ローカルtemplate依存の明示固定。取得せずruntimeはunresolved |
+| `pdx lock [path]` | ローカルtemplate依存の明示固定。取得せず既存の有効runtime pinは保持。`--runtime-image` で明示probe/固定 |
 | `pdx fetch` | lockに固定した依存を明示取得・digest検証 |
-| `pdx build --target <id>` / `pdx build --all-targets` | 準備済み依存からPDF化。download/lock更新/Git操作はしない |
+| `pdx build [path] --target <id> --timeout-seconds 600` | 最小R2実装。準備済みlocal imageからPDF化。download/lock更新/Git操作はしない。all-targetsは未実装 |
 | `pdx doctor` | OS・Docker・必要tool・固定依存の状態を診断。自動インストールしない |
 | `pdx template list` / `add` / `check` | 登録一覧、明示取得/追加、package静的検証。安全境界は緩めない |
 | `pdx clean` / `pdx clean --apply` | 既定はdry-run。--applyだけが確認済みアプリ所有物を削除 |
@@ -46,7 +46,7 @@ JSON対応操作の `--json` はversion付きの一objectだけをstdoutに出�
 
 `--json` なしでは人間向けの日本語要約を返します。成功はstdoutへ、失敗はコード・exit code・診断本文・metadata位置（ある場合）をstderrへ出します。主要な入力・template/lock不整合には確認先と明示的な復旧操作を添え、自動修復はしません。通常表示の文言は機械契約ではなく、parseする利用者は `--json` を指定してください。両表示で終了コードと検証処理は共通です。出力先への書込み失敗はexit 5です。
 
-通常のplan要約はTarget/Document、template ID/version・内蔵IDまたはProject内path・digest、順序付き本文、bibliography/resource/metadata参照、出力先、未確認の必要toolを表示します。全fieldと結合metadataは `plan --json` で返します。静的操作だけではruntime未確認・PDF生成未実装・`build_ready=false` であることを成功表示にも明示します。
+通常のplan要約はTarget/Document、template ID/version・内蔵IDまたはProject内path・digest、順序付き本文、bibliography/resource/metadata参照、出力先、未確認の必要toolを表示します。全fieldと結合metadataは `plan --json` で返します。静的操作だけではruntime未確認・`build_ready=false` であることを成功表示にも明示します。
 
 envelopeは `schema_version: 1`、`command`、`status: success|error`、`message`、`data`、`error`、`unverified` を常に持ちます。成功時はdata objectとerror=null、失敗時はdata=nullとerror objectです。errorは安定 `code`、`message`、`exit_code`、`instance_path`（metadata schema違反以外はnull）を持ちます。引数解析時commandは `arguments`。stdoutへの保存失敗はexit 5で、出力先自体が壊れている場合の完全JSONは保証できません。
 
@@ -64,6 +64,6 @@ envelopeは `schema_version: 1`、`command`、`status: success|error`、`message
 
 initは親directoryが存在する新規directory、または空directoryだけを受理します。`content/report.md`、`metadata/common.yaml`、`references.bib`、`figures/`、`pdx.toml`、`pdx.lock`、`.gitignore` を作成します。既存entryが一つでもあれば拒否します。create-newのguardと各fileの排他作成で通常の同時initによる上書きを防ぎ、途中失敗では作成済みfileと空directoryだけを戻します。既存directory自体を消しません。cleanup失敗は残存pathとexit 5を返します。別userによる敵対的path差替え、電源断の完全transaction保証は含みません。
 
-`check` / `plan` は書込みゼロ。`lock` は明示したlock更新だけを行います。全操作が未解決runtimeと未検証のPDF/書式を結果へ示し、静的successをbuild-readyとは表示しません。
+`check` / `plan` は書込みゼロ。`lock` は明示したlock更新だけを行います。静的successをbuild-readyとは表示しません。buildのruntime/PDF検証は[最小R2契約](runtime-r2.md)の結果として区別します。
 
 cleanはProjectの本文・図・metadataやユーザー所有PDFを消しません。削除候補は所有記録と正規化済みpathで確定し、危険リンク・所有不明・領域外は拒否します。更新/削除による原稿保全は[構成](../architecture/system.md)の領域境界に従います。

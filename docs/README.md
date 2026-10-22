@@ -21,6 +21,7 @@ canonical_for:
 | テンプレート | [template](contracts/template.md) | package、toolchain、実証順 |
 | CLI・終了コード・JSON | [cli](contracts/cli.md) | コマンドの効果と失敗 |
 | build・隔離・成果物 | [build](contracts/build.md) | snapshotから確定・cleanupまで |
+| 最小R2の具体実装 | [runtime-r2](contracts/runtime-r2.md) | local runtime固定・単一Target build・世代・制約 |
 | 採用判断 | [ADR一覧](decisions/README.md) | 背景、採用理由、帰結 |
 | 開発・Git・review・検証 | [development](operations/development.md) | 作業gateと証拠 |
 | 実装段階 | [rounds](operations/rounds.md) | R0〜R5、停止境界 |
@@ -32,3 +33,5 @@ canonical_for:
 R1の実装・検証範囲: [R1報告](reports/r1-static-cli.md)。fieldの機械契約は各contractから `schemas/` へ参照します。
 
 R1のtemplate検証修正・通常CLI表示・source install・静的時間観測: [R1追補](reports/r1-usability.md)。
+
+最小R2の実PDF・異常系・独立レビューと未検証範囲: [R2報告](reports/r2-first-pdf.md)。

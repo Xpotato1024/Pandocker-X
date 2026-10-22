@@ -124,7 +124,7 @@ fn json_arguments_and_operation_errors_are_one_object() {
         vec!["plan", "--target", "--json"],
         vec!["init", "--json"],
         vec!["--json=true", "check"],
-        vec!["build", "--json"],
+        vec!["build", "--timeout-seconds", "0", "--json"],
     ] {
         let args: Vec<_> = args.iter().map(std::ffi::OsStr::new).collect();
         let (code, result) = run_at(&binary, temp.path(), &args);

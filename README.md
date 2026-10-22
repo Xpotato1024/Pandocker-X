@@ -4,7 +4,7 @@
 
 ## 現在の状態
 
-**R1はRust共通層とDocker不要の `init` / `check` / `plan`、ローカル依存の明示 `lock` を実装しています。PDF組版はR2です。** 組版image、fetch/build/doctor/clean、インストーラ、Windows配布受入は未実装です。静的成功でも `static_only=true`、`runtime_verified=false`、`build_ready=false` を返します。検証結果と未実施範囲は[R1報告](docs/reports/r1-static-cli.md)を参照してください。
+**Rust共通層、Docker不要の静的操作と、固定local Docker imageによる最小R2 `build` を実装しています。** runtimeの明示固定からsnapshot・PDF検査・世代確定までを扱います。fetch/doctor/clean、インストーラ、自動更新・配布受入は未実装です。静的成功でも `static_only=true`、`runtime_verified=false`、`build_ready=false` を返します。buildの具体境界は[build契約](docs/contracts/build.md)を参照してください。
 
 2026-10-15承認の非互換な再開発です。旧実装・仕様・CLI互換性は継承しません。旧版は `archive/pre-rebuild-2026-10-15`、SHA `4fac1495e5418c57bb23e74509091ae333a5e7f4` に保全し、Git履歴と[LICENSE](LICENSE)を保持します。旧コードを新版treeへ移植せず、`legacy/` も残しません。保全の確認結果は[R0報告](docs/reports/r0-foundation.md)に記録します。
 
@@ -31,7 +31,20 @@ cargo install --path apps/pdx --locked --root "<ユーザー所有の専用app d
 
 配置先はそのdirectoryの `bin/pdx`（Windowsは `bin/pdx.exe`）です。PATHを変更する前でも実行ファイルの絶対pathで起動できます。原稿は配置先の外に作成し、更新時も `pdx.toml` と `pdx.lock` を原稿とともに保持してください。template依存はlockで固定しますが、runtimeは未解決で、PDF再現性はまだ検証していません。
 
-通常表示は日本語の要約と次の操作です。`plan` で選択Target・templateの由来/digest・入力順・出力先を確認できます。失敗はstderrへコード・metadata位置・復旧案を出し、非0で終了します。自動処理には `--json` を使ってください。全fieldと結合metadataを含む版付きJSON一objectをstdoutへ返します。templateの切替手順は[Project契約の例](docs/contracts/project.md#templateを切り替える例)を参照してください。`build` はまだ利用できません。
+通常表示は日本語の要約と次の操作です。`plan` で選択Target・templateの由来/digest・入力順・出力先を確認できます。失敗はstderrへコード・metadata位置・復旧案を出し、非0で終了します。自動処理には `--json` を使ってください。全fieldと結合metadataを含む版付きJSON一objectをstdoutへ返します。templateの切替手順は[Project契約の例](docs/contracts/project.md#templateを切り替える例)を参照してください。
+
+## 初回PDF（最小R2・開発導入）
+
+Linux版pdxとlocal Docker Engineを使う場合の例です。Windows nativeとDocker Desktopの組合せは別途実PDFの受入が必要です。公式imageから作る[開発用runtime](runtime/Dockerfile)を明示的にlocal buildし、Dockerが返した完全なlocal image IDを固定します。imageは公開しません。
+
+```sh
+docker build --platform linux/amd64 --pull=false -t pdx-runtime:local runtime
+IMAGE_ID=$(docker image inspect pdx-runtime:local --format '{{.Id}}')
+pdx lock "原稿 path" --runtime-image "$IMAGE_ID"
+pdx build "原稿 path" --target report --timeout-seconds 600
+```
+
+buildはpull・lock更新を行いません。通常はnetworkなし・non-root・読み取り専用snapshotで実行し、新しい `output/report/<build-id>/document.pdf` と `build.json` を返します。失敗・Ctrl+C・再実行で前回世代を置換しません。Stateはユーザー領域へ置き、`PDX_STATE_ROOT` で絶対pathを明示できます。領域・予算・復旧方法は[build契約](docs/contracts/build.md)に従います。PDF読取検査と、書式適合・他端末での再現性は別の受入です。
 
 ## 読み始める場所
 

@@ -4,6 +4,8 @@ use std::{
     collections::BTreeMap,
     path::{Path, PathBuf},
 };
+mod build;
+pub use build::*;
 
 pub trait ProjectStore {
     fn locate(&self, explicit: Option<&Path>) -> Result<PathBuf>;
@@ -27,6 +29,8 @@ pub struct CheckedProject {
     pub root: PathBuf,
     pub default_target: String,
     pub plans: BTreeMap<String, BuildPlan>,
+    pub project: Project,
+    pub lock: DependencyLock,
 }
 impl<S: ProjectStore> Application<S> {
     pub fn new(store: S) -> Self {
@@ -69,14 +73,25 @@ impl<S: ProjectStore> Application<S> {
             plans.insert(id.clone(), plan);
         }
         let expected = DependencyLock::from_packages(&packages);
-        if require_lock {
+        let actual = if require_lock {
             let lock = parse_lock(&self.text(&root, "pdx.lock", 1_048_576)?)?;
             lock.validate(&packages)?;
+            lock
+        } else {
+            expected.clone()
+        };
+        for plan in plans.values_mut() {
+            plan.runtime = actual.runtime.clone();
+            if matches!(actual.runtime, RuntimeResolution::Docker(_)) {
+                plan.schema_version = 2;
+            }
         }
         let checked = CheckedProject {
             root,
             plans,
-            default_target: project.default_target,
+            default_target: project.default_target.clone(),
+            project,
+            lock: actual,
         };
         Ok((checked, expected))
     }
@@ -96,7 +111,15 @@ impl<S: ProjectStore> Application<S> {
             .ok_or_else(|| Diagnostic::input("unknown_target", target.unwrap_or("")))
     }
     pub fn lock(&self, path: Option<&Path>) -> Result<CheckedProject> {
-        let (checked, lock) = self.load(path, false)?;
+        let (checked, mut lock) = self.load(path, false)?;
+        if let Ok(text) = self.text(&checked.root, "pdx.lock", 1_048_576)
+            && let Ok(previous) = parse_lock(&text)
+            && let RuntimeResolution::Docker(pin) = previous.runtime
+        {
+            pin.validate()?;
+            lock.schema_version = 2;
+            lock.runtime = RuntimeResolution::Docker(pin);
+        }
         self.store.save_lock(&checked.root, &encode_lock(&lock)?)?;
         Ok(checked)
     }

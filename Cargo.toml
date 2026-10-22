@@ -11,13 +11,14 @@ license = "MIT"
 [workspace.dependencies]
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.154"
-toml = { version = "=1.1.8", default-features = false, features = ["parse", "serde"] }
+toml = { version = "=1.1.8", default-features = false, features = ["parse", "serde", "display"] }
 clap = { version = "=4.6.1", features = ["derive"] }
 sha2 = "=0.10.9"
 tempfile = "=3.27.0"
 jsonschema = { version = "=0.58.6", default-features = false }
 serde-saphyr = { version = "=2.0.0", default-features = false, features = ["deserialize"] }
 percent-encoding = "=2.3.2"
+ctrlc = "=3.5.2"
 pdx-core = { path = "crates/pdx-core" }
 pdx-application = { path = "crates/pdx-application" }
 pdx-adapters = { path = "crates/pdx-adapters" }

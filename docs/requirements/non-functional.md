@@ -38,6 +38,8 @@ canonical_for:
 
 ## R1の追跡と未完了範囲
 
+最小R2では原稿・前回世代保全、runtime隔離、累積出力予算、取消/timeout収束を追加しました。[build制御tests](../../tests/build_control.rs)、[Docker adapter unit](../../crates/pdx-adapters/src/docker.rs)、[R2実PDF報告](../reports/r2-first-pdf.md)へ追跡します。配布・別端末再現性・電源断/敵対的path差替えの完全保証・性能改善率は受入済みとしません。以下はR1時点の追跡です。
+
 - NFR-01 / NFR-02 / NFR-07: [FS integration](../../tests/contracts.rs)の全file digest前後比較、途中init失敗・同時init、case alias/output衝突、日本語/空白、Windows junction/Linux symlink。更新/削除・runtime中断・配布受入はR2/R4。
 - NFR-04: template digestの場所非依存、本文/図/metadata変更時のlock不変、planの決定性を同テストで検証。BuildRecord/PDF再現性はR2/R3。
 - NFR-11 / NFR-12 / NFR-14: [architecture/docs](../../tests/architecture.rs)がworkspace依存方向、pure core、全横断testのCargo登録、正本source map、内部リンク、日本語UTF-8/LF、Just/CIの範囲を確認。
