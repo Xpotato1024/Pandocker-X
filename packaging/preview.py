@@ -13,8 +13,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def run(*args):
-    result = subprocess.run(args, cwd=ROOT, capture_output=True, timeout=180)
+def run(*args, timeout=180):
+    result = subprocess.run(args, cwd=ROOT, capture_output=True, timeout=timeout)
     if result.returncode:
         raise RuntimeError(f"{args[0]} failed: {result.stderr.decode('utf-8', errors='replace')}")
     return result.stdout.decode("utf-8").strip()
@@ -108,7 +108,6 @@ def license_inventory(destination, target):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--target", choices=["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"], required=True)
-    parser.add_argument("--binary", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source-asset", action="store_true")
     args = parser.parse_args()
@@ -116,6 +115,9 @@ def main():
         raise ValueError("package only a clean committed checkout")
     if args.output.exists():
         raise ValueError("fresh output directory required")
+    args.output = args.output.resolve()
+    if args.output.is_relative_to(ROOT):
+        raise ValueError("package output must be outside the source checkout")
     args.output.mkdir(parents=True)
     assets = args.output / "assets"
     assets.mkdir()
@@ -131,8 +133,13 @@ def main():
     if not re.fullmatch(r"3\.0\.0-preview\.[1-9][0-9]*", version):
         raise ValueError("this packager publishes only the reviewed v3 preview series")
     binary_name = "pdx.exe" if "windows" in args.target else "pdx"
+    # A fresh target directory prevents accepting an unrelated same-version binary.
+    run("cargo", "build", "-p", "pdx", "--release", "--locked", "--offline",
+        "--target", args.target, "--target-dir", str(args.output / "build"), timeout=1200)
+    if run("git", "rev-parse", "HEAD") != commit or run("git", "status", "--porcelain", "--untracked-files=all"):
+        raise ValueError("source changed while building")
     binary = stage / binary_name
-    shutil.copyfile(args.binary, binary)
+    shutil.copyfile(args.output / "build" / args.target / "release" / binary_name, binary)
     binary.chmod(0o755)
     actual_version = run(str(binary.resolve()), "--version")
     if actual_version != f"pdx {version}":
