@@ -1,5 +1,7 @@
 # Pandocker-X vNext
 
+確認用 `v3.0.0-preview.1` の手動配布を準備しています。[preview配布手順と検証範囲](docs/operations/preview-release.md)を参照してください。旧2.xとは非互換です。
+
 ユーザー所有の原稿を、選択したテンプレートと固定した組版環境でPDF化するローカルアプリを新規開発します。CLI-firstで、利用者の入口は `pdx` とします。
 
 ## 現在の状態

@@ -8,6 +8,8 @@ canonical_for:
 
 # 実装段階
 
+2026-10-23追記: PR19→20→21→22を通常mergeし、master CIを確認しました。追加の明示承認により、確認用previewの配布・Release公開を進めます。[preview配布](preview-release.md)に限定した範囲であり、以下のRound全体の完了とは区別します。過去の「公開は範囲外」は当時のR2実装依頼の境界です。
+
 2026-10-22の明示承認により、PR21上の独立stackで最小R2の初回PDF経路を実装します。先行PR19/20/21は統合せず、fetch/doctor/clean・公開は範囲外です。[最小R2契約](../contracts/runtime-r2.md)に今回の範囲を定義します。以下のR1限定は当初Issue #18の境界です。
 
 Phaseは大きな到達点、Roundは一回の実行単位、Issueは一つのPRへ収める変更単位です。1 Issue = 1 PRを維持し、各Roundの受入条件を確認してから次を別途開始します。Issue #18の範囲はR1のみです。R0の履歴は[R0報告](../reports/r0-foundation.md)、R1の観測は[R1報告](../reports/r1-static-cli.md)に分けます。
