@@ -699,7 +699,7 @@ dependencies = [
 
 [[package]]
 name = "pdx"
-version = "0.1.0"
+version = "3.0.0-preview.1"
 dependencies = [
  "clap",
  "ctrlc",
@@ -711,7 +711,7 @@ dependencies = [
 
 [[package]]
 name = "pdx-adapters"
-version = "0.1.0"
+version = "3.0.0-preview.1"
 dependencies = [
  "pdx-application",
  "pdx-core",
@@ -721,14 +721,14 @@ dependencies = [
 
 [[package]]
 name = "pdx-application"
-version = "0.1.0"
+version = "3.0.0-preview.1"
 dependencies = [
  "pdx-core",
 ]
 
 [[package]]
 name = "pdx-contract-tests"
-version = "0.1.0"
+version = "3.0.0-preview.1"
 dependencies = [
  "jsonschema",
  "pdx-adapters",
@@ -742,7 +742,7 @@ dependencies = [
 
 [[package]]
 name = "pdx-core"
-version = "0.1.0"
+version = "3.0.0-preview.1"
 dependencies = [
  "jsonschema",
  "percent-encoding",

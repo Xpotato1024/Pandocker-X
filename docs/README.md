@@ -8,6 +8,8 @@ canonical_for:
 
 # 文書正本マップ
 
+previewの導入・配布検査・公開境界は [preview-release](operations/preview-release.md) を正本とします。
+
 各主題の規範は以下の一箇所に置きます。他文書はリンクで参照し、同じ仕様をコピーしません。R1の静的操作の具体契約と、R2以降の設計要求を区別します。実測・実行証拠はreportsで区別します。
 
 | 主題 | 正本 | 内容 |
